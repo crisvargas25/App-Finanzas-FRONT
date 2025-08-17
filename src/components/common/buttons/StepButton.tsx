@@ -51,11 +51,8 @@ const actionColors = {
 const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
-    marginTop: 'auto', // pushes the button to the bottom
-    paddingBottom: 60,
-    top: 50,
+    top: 40,
   },
-
 });
 
 export default StepButton;

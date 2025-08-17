@@ -3,6 +3,9 @@ import { View, StyleSheet, TouchableOpacity, Image, TextInput, Alert } from 'rea
 import { Text } from '../../components/ui/text';
 import StepButton from '../../components/common/buttons/StepButton';
 import { useNavigation } from '@react-navigation/native';
+import MainContainer from '../../components/common/containers/mainContainer';
+import Header from '../../components/common/headings/header';
+import Header2 from '../../components/common/headings/header2';
 
 export default function ForgetPassScreen() {
   const navigation = useNavigation();
@@ -33,7 +36,7 @@ export default function ForgetPassScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <MainContainer>
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image 
@@ -45,10 +48,8 @@ export default function ForgetPassScreen() {
 
       {/* Title */}
       <View style={styles.titleContainer}>
-        <Text size="xl" type="blackText" align="center" style={styles.title}>
-          Recover Password
-        </Text>
-        <Text size="md" type="grayText" align="center" style={styles.subtitle}>
+        <Text size="xl" type="blackText" >Recover Password</Text>
+        <Text size="md" type="grayText" align="center">
           Enter your email address and we'll send you a link to reset your password.
         </Text>
       </View>
@@ -70,45 +71,27 @@ export default function ForgetPassScreen() {
       {/* Reset button */}
       <View style={styles.buttonContainer}>
         <StepButton text="Send Reset Link" onPress={handleResetPassword} />
+        <TouchableOpacity onPress={handleBackToLogin} style={styles.backContainer}>
+          <Text size="smButton" type="navyBlueText" align="center"> Back to Login </Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Back to login */}
-      <TouchableOpacity onPress={handleBackToLogin} style={styles.backContainer}>
-        <Text size="md" type="navyBlueText" align="center">
-          Back to Login
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </MainContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    justifyContent: 'center',
-  },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 60,
+    justifyContent: 'center',
+    margin: 100,
   },
   logo: {
-    width: 200,
+    width: 250,
     height: 60,
   },
   titleContainer: {
     marginBottom: 40,
     alignItems: 'center',
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  subtitle: {
-    textAlign: 'center',
-    lineHeight: 24,
   },
   formContainer: {
     marginBottom: 40,
@@ -124,9 +107,10 @@ const styles = StyleSheet.create({
     color: '#373643',
   },
   buttonContainer: {
-    marginBottom: 30,
+    marginBottom: 38,
+    top: 130,
   },
   backContainer: {
-    paddingVertical: 16,
+    marginTop: 60,
   },
 });

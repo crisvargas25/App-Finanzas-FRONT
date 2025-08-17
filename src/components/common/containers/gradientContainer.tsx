@@ -9,7 +9,6 @@ interface GradientContainerProps {
 }
 
 function GradientContainer({ children, style 
-
 }: GradientContainerProps) {
 
   return (

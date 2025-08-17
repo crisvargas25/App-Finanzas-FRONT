@@ -73,10 +73,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    bottom: 20,
+    bottom: 26,
   },
   moneyImage: {
-    width: width * 0.9,
-    height: height * 0.40,
+    width: 500,
+    height: 350,
   },
 });

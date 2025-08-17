@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
   return (
     <MainContainer>
-      {/* Logo */}
+      <View style={styles.content}>
       <View style={styles.logoContainer}>
         <Image 
           source={require('../../../assets/MainLogos/MainBlack.png')} 
@@ -78,21 +78,27 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity onPress={handleForgotPassword}>
-          <Text size="sm" type="navyBlueText" style={styles.forgotPassword}>
+          <Text size="smButton" type="navyBlueText" style={styles.forgotPassword}>
             forget password?
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Login button */}
-      <View>
+      <View style={styles.buttonContainer}>
         <StepButton text="Login" onPress={handleLogin} />
       </View>
+    </View>
     </MainContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    zIndex: 2,
+  },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -101,6 +107,9 @@ const styles = StyleSheet.create({
   logo: {
     width: 250,
     height: 60,
+  },
+  buttonContainer: {
+    top: 140,
   },
   formContainer: {
     marginBottom: 40,
@@ -116,7 +125,6 @@ const styles = StyleSheet.create({
     color: '#373643',
   },
   forgotPassword: {
-    marginTop: 8,
     textAlign: 'left',
   },
 });

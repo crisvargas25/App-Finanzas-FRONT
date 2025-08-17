@@ -120,7 +120,7 @@ export default function SignUpScreen() {
       </View>
 
       {/* Sign up button */}
-      <View>
+      <View style={styles.buttonContainer}>
         <StepButton text="Sign up" onPress={handleSignUp} />
       </View>
     </MainContainer>
@@ -137,21 +137,8 @@ const styles = StyleSheet.create({
     width: 250,
     height: 60,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 40,
-  },
-  tab: {
-    flex: 1,
-    paddingBottom: 12,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#122c6f',
-  },
-  tabText: {
-    fontWeight: '500',
+  buttonContainer: {
+    bottom: 20,
   },
   formContainer: {
     marginBottom: 40,
