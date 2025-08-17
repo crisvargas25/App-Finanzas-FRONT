@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
-import { Text } from '../ui/text';
+import { Text } from '../../shared/ui/text';
 
 interface CurrencyOption {
   code: string;

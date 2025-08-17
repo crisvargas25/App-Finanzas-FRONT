@@ -1,4 +1,4 @@
-import {Text} from "../../ui/text";
+import {Text} from "../../../shared/ui/text";
 
 interface HeaderProps {
   children?: React.ReactNode;

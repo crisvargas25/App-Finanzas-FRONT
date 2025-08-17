@@ -1,6 +1,6 @@
 import { View } from "react-native"; 
-import { Card } from "../../ui/card";
-import { Text } from "../../ui/text";
+import { Card } from "../../../shared/ui/card";
+import { Text } from "../../../shared/ui/text";
 
 interface Card2Props {
   children?: React.ReactNode;

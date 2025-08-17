@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthContext } from '../../shared/contexts/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import DrawerNavigator from './DrawerNavigator';
 
@@ -12,7 +12,7 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useContext(AuthContext);
 
   return (
     <Stack.Navigator

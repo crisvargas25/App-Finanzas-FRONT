@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Text } from '../ui/text';
+import { Text } from '../../../shared/ui/text';
 
 const styles = StyleSheet.create({
   tabContainer: {

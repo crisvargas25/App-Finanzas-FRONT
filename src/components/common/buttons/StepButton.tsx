@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { Button } from "../../ui/button";
-import { Text } from "../../ui/text";
+import { Button } from "../../../shared/ui/button";
+import { Text } from "../../../shared/ui/text";
 import { StyleSheet } from 'react-native';
 
 interface StepButtonProps {

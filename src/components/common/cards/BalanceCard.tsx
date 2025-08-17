@@ -1,8 +1,8 @@
 import Card1 from "../cards/card1";
-import { Card } from "../../ui/card";
-import { Text } from "../../ui/text";
+import { Card } from "../../../shared/ui/card";
+import { Text } from "../../../shared/ui/text";
 import { View, Image } from "react-native";
-import { useToggleVisibility } from "../../../hooks/useToggleVisibility";
+import { useToggleVisibility } from "../../../shared/hooks/useToggleVisibility";
 
 function BalanceCard() {
   const { isVisible, toggleVisibility, hideValue } = useToggleVisibility(false);

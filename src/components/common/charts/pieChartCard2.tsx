@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
-import { PieChart, PieChartData } from '../../ui/pieChart';
-import { Text } from '../../ui/text';
+import { PieChart, PieChartData } from '../../../shared/ui/pieChart';
+import { Text } from '../../../shared/ui/text';
 
 interface PieChartCard2Props {
   data?: PieChartData[];

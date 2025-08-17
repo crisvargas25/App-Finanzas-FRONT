@@ -1,6 +1,6 @@
-import Container from "../../ui/container";
+import Container from "../../../shared/ui/container";
 import React from "react";
-import GradientBackground from "../../ui/gradientBackground";
+import GradientBackground from "../../../shared/ui/gradientBackground";
 import { StyleSheet } from "react-native";
 
 interface GradientContainerProps {

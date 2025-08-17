@@ -2,11 +2,10 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, StyleSheet } from 'react-native';
-
 import BottomTabNavigator from './BottomTabNavigator';
-import ProfileScreen from '../screens/profile/ProfileScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-
+import ProfileScreen from '../../features/profile/ProfileScreen';
+import SettingsScreen from '../../features/SettingsScreens';
+import AboutScreen from '../../features/AboutScreen'; // Add this screen
 import { DrawerParamList } from './types';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -16,7 +15,7 @@ const LogoTitle = () => {
   return (
     <Image
       style={styles.logo}
-      source={require('../../assets/logoWhite.png')} // Ajusta la ruta a tu logotipo
+      source={require('../../../assets/logoWhite.png')}
       resizeMode="contain"
     />
   );
@@ -44,20 +43,20 @@ export default function DrawerNavigator() {
         },
       }}
     >
-      <Drawer.Screen 
-        name="Main" 
+      <Drawer.Screen
+        name="Tabs"
         component={BottomTabNavigator}
         options={{
           headerTitle: () => <LogoTitle />,
-          title: '', // Eliminar el título de texto
+          title: '',
           drawerLabel: 'Inicio',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
-      <Drawer.Screen 
-        name="Profile" 
+      <Drawer.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           title: 'Perfil',
@@ -67,8 +66,8 @@ export default function DrawerNavigator() {
           ),
         }}
       />
-      <Drawer.Screen 
-        name="Settings" 
+      <Drawer.Screen
+        name="Settings"
         component={SettingsScreen}
         options={{
           title: 'Configuración',
@@ -78,9 +77,9 @@ export default function DrawerNavigator() {
           ),
         }}
       />
-      <Drawer.Screen 
-        name="About" 
-        component={ProfileScreen} // Temporal, luego crear AboutScreen
+      <Drawer.Screen
+        name="About"
+        component={AboutScreen}
         options={{
           title: 'Acerca de',
           drawerLabel: 'Acerca de',

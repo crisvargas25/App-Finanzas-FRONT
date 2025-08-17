@@ -1,6 +1,6 @@
 import { View, TouchableOpacity } from "react-native";
-import { Card } from "../../ui/card";
-import { Text } from "../../ui/text";
+import { Card } from "../../../shared/ui/card";
+import { Text } from "../../../shared/ui/text";
 import { LinearGradient } from 'expo-linear-gradient';
 import { ColorValue, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

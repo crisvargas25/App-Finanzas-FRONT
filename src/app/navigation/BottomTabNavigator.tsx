@@ -1,14 +1,17 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import DashboardScreen from '../../features/dashboard/DashboardScreen';
+import TransactionsScreen from '../../features/transactions/TransactionsScreen';
+import BudgetScreen from '../../features/budgets/BudgetScreen';
+import GoalsScreen from '../../features/goals/GoalsViewScreen';
 
-import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import TransactionsScreen from '../screens/transactions/TransactionsScreen';
-import BudgetScreen from '../screens/budgets/BudgetScreen';
-import GoalsScreen from '../screens/goals/GoalsViewScreen';
-
-import { BottomTabParamList } from './types'; 
-
+export type BottomTabParamList = {
+  Dashboard: undefined;
+  Transactions: undefined;
+  Budget: undefined;
+  Goals: undefined;
+};
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -21,7 +24,7 @@ export default function BottomTabNavigator() {
 
           switch (route.name) {
             case 'Dashboard':
-              iconName = focused ? 'home' : 'home-outline'; 
+              iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Transactions':
               iconName = focused ? 'card' : 'card-outline';
@@ -54,18 +57,18 @@ export default function BottomTabNavigator() {
         headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="Dashboard" 
+      <Tab.Screen
+        name="Dashboard"
         component={DashboardScreen}
         options={{ tabBarLabel: 'Home' }}
       />
-      <Tab.Screen 
-        name="Transactions" 
+      <Tab.Screen
+        name="Transactions"
         component={TransactionsScreen}
         options={{ tabBarLabel: 'Transactions' }}
       />
-      <Tab.Screen 
-        name="Budget" 
+      <Tab.Screen
+        name="Budget"
         component={BudgetScreen}
         options={{ tabBarLabel: 'Budgets' }}
       />

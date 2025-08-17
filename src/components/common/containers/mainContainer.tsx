@@ -1,4 +1,4 @@
-import Container from "../../ui/container";
+import Container from "../../../shared/ui/container";
 import React from "react";
 
 interface MainContainerProps {

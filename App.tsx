@@ -1,14 +1,16 @@
 import React from 'react';
-//import "./global.css"
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { enableScreens } from 'react-native-screens';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-gesture-handler';
-import { useCustomFonts } from './src/hooks/useCustomFonts';
+import { GluestackUIProvider } from './src/shared/ui/gluestack-ui-provider';
+import { AuthProvider } from './src/shared/contexts/AuthContext';
+import { useCustomFonts } from './src/shared/hooks/useCustomFonts';
 import { Text } from 'react-native';
-import { AuthProvider } from './src/contexts/AuthContext';
+import AppNavigator from './src/app/navigation/AppNavigator';
 
-import AppNavigator from './src/navigation/AppNavigator';
+enableScreens();
 
 export default function App() {
   const fontsLoaded = useCustomFonts();
@@ -18,13 +20,17 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <GluestackUIProvider mode="light">
-        <NavigationContainer>
-          <AppNavigator />
-          <StatusBar style="light" />
-        </NavigationContainer>
-      </GluestackUIProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <GluestackUIProvider mode="light">
+            <NavigationContainer>
+              <AppNavigator />
+              <StatusBar style="light" />
+            </NavigationContainer>
+          </GluestackUIProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
