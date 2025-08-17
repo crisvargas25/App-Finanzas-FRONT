@@ -4,9 +4,9 @@ import { Text } from '../../components/ui/text';
 import StepButton from '../../components/common/buttons/StepButton';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
-import { TEST_CREDENTIALS } from '../../utils/testCredentials';
 import MainContainer from '../../components/common/containers/mainContainer';
 import TabSwitcher from '../../components/common/tabSwitcher';
+import Input from '../../components/forms/input';
 
 
 export default function LoginScreen() {
@@ -24,11 +24,20 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    const success = await login(email, password);
-    if (success) {
-      Alert.alert('Éxito', 'Login exitoso');
-    } else {
-      Alert.alert('Error', `Credenciales incorrectas. Usa:\nEmail: ${TEST_CREDENTIALS.email}\nPassword: ${TEST_CREDENTIALS.password}`);
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor ingresa email y contraseña');
+      return;
+    }
+
+    try {
+      const success = await login(email, password);
+      if (success) {
+        Alert.alert('Éxito', 'Login exitoso');
+      } else {
+        Alert.alert('Error', 'Credenciales incorrectas. Verifica tu email y contraseña.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo conectar al servidor. Verifica tu conexión a internet.');
     }
   };
 
@@ -56,26 +65,19 @@ export default function LoginScreen() {
 
       {/* Form */}
       <View style={styles.formContainer}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="email@gmail.com"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="• • • • • • • •"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-        </View>
+        <Input
+          placeholder="email@gmail.com"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <Input
+          placeholder="• • • • • • • •"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
         <TouchableOpacity onPress={handleForgotPassword}>
           <Text size="smButton" type="navyBlueText" style={styles.forgotPassword}>
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
     height: 60,
   },
   buttonContainer: {
-    top: 140,
+    top: 150,
   },
   formContainer: {
     marginBottom: 40,

@@ -51,7 +51,7 @@ const actionColors = {
 const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
-    top: 40,
+    top: 30,
   },
 });
 

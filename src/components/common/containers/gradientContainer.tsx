@@ -18,7 +18,7 @@ function GradientContainer({ children, style
         background="transparent"
         gradient={<GradientBackground />}
         fullHeight
-      scrollable
+      scrollable  
       style={style}
     >
       {children}

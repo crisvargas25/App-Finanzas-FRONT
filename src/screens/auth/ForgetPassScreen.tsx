@@ -4,8 +4,8 @@ import { Text } from '../../components/ui/text';
 import StepButton from '../../components/common/buttons/StepButton';
 import { useNavigation } from '@react-navigation/native';
 import MainContainer from '../../components/common/containers/mainContainer';
-import Header from '../../components/common/headings/header';
-import Header2 from '../../components/common/headings/header2';
+import { useAuth } from '../../contexts/AuthContext';
+import Input from '../../components/forms/input';
 
 export default function ForgetPassScreen() {
   const navigation = useNavigation();
@@ -56,16 +56,13 @@ export default function ForgetPassScreen() {
 
       {/* Form */}
       <View style={styles.formContainer}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="email@gmail.com"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+        <Input
+          placeholder="email@gmail.com"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
       </View>
 
       {/* Reset button */}

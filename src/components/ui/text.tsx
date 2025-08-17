@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
-import { fonts, fontSizes, fontWeights, lineHeights } from '../../styles/typography';
+import { fonts, fontSizes, lineHeights } from '../../styles/typography';
 
 interface TextProps {
   children: React.ReactNode;
