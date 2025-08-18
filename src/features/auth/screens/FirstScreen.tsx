@@ -71,30 +71,28 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'flex-start',
-    marginTop: 100,
+    marginTop: 70,
+    left: 14,
   },
   logo: {
     width: 120,
     height: 40,
   },
   textContainer: {
-  marginTop: 10,
+  marginTop: 8,
   paddingHorizontal: 20,
-  overflow: 'visible', // <-- Añadido
+  overflow: 'visible', // esto es para permitir que el texto se desborde
 },
 
 mainText: {
-  fontWeight: 'bold',
-  flexWrap: 'wrap',
-  lineHeight: 54,    // más alto para evitar recorte
-  paddingTop: 14,    // más espacio arriba
+  flexWrap: 'wrap', // esto es para permitir que el texto se ajuste en varias líneas
 },
 
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    bottom: 26,
+    bottom: 20,
   },
   moneyImage: {
     width: 500,
@@ -103,7 +101,7 @@ mainText: {
   buttonWrapper: {
   width: '100%',        // que ocupe toda la anchura de la pantalla
   paddingHorizontal: 20, // opcional, para que no toque los bordes
-  marginBottom: 40,      // opcional, separación del fondo
   zIndex: 3,
+  bottom: 20,
 },
 });

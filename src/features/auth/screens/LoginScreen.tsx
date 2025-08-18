@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Alert, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, Alert, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MainContainer from '../../../components/common/containers/mainContainer';
@@ -9,6 +9,7 @@ import CurrencySelector from '../../../components/forms/currencySelector';
 import TabSwitcher from '../hooks/tabSwitcher';
 import { AuthContext } from '../../../shared/contexts/AuthContext';
 import { AuthStackParamList } from '../../../app/navigation/types';
+import Text from '../../../shared/ui/text';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
@@ -37,7 +38,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Por favor completa ambos campos');
+      Alert.alert('Error', 'Please complete all fields.');
       setErrorVisible(true);
       return;
     }
@@ -45,29 +46,29 @@ export default function LoginScreen() {
       setErrorVisible(false);
       console.log('Attempting login with:', { email, password });
       await login(email.trim(), password.trim());
-      Alert.alert('Éxito', 'Inicio de sesión exitoso'); // Opcional: feedback
+      Alert.alert('Éxito', 'Login success'); // Opcional: feedback
     } catch (err: any) {
       console.error('Login error:', err.message);
-      Alert.alert('Error', err.message || 'Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.');
+      Alert.alert('Error', err.message || 'Email or password is incorrect. Please try again.');
       setErrorVisible(true);
     }
   };
 
   const handleSignUp = async () => {
     if (!name || !email || !confirmEmail || !password || !currency) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      Alert.alert('Error', 'Please complete all fields');
       setErrorVisible(true);
       return;
     }
     if (email !== confirmEmail) {
-      Alert.alert('Error', 'Los correos electrónicos no coinciden');
+      Alert.alert('Error', 'Emails do not match');
       setErrorVisible(true);
       return;
     }
     try {
       setErrorVisible(false);
       await signup({ name, email, password, currency });
-      Alert.alert('Éxito', 'Cuenta creada correctamente');
+      Alert.alert('Éxito', 'Account created successfully');
       // No cambiamos a la pestaña de login ni seteamos isAuthenticated
       setName(''); // Opcional: limpia los campos
       setEmail('');
@@ -76,7 +77,7 @@ export default function LoginScreen() {
       setCurrency('');
     } catch (err: any) {
       console.error('Signup error:', err.message);
-      Alert.alert('Error', err.message || 'No se pudo crear la cuenta. Inténtalo de nuevo.');
+      Alert.alert('Error', err.message || 'The account could not be created. Please try again.');
       setErrorVisible(true);
     }
   };
@@ -101,17 +102,17 @@ export default function LoginScreen() {
         <View style={styles.errorMessage}>
           <Text style={styles.errorText}>
             {activeTab === 'login'
-              ? 'Correo electrónico o contraseña incorrectos.'
+              ? 'Email or password is incorrect.'
               : activeTab === 'signup' && email !== confirmEmail
-              ? 'Los correos electrónicos no coinciden.'
-              : 'Por favor completa todos los campos.'}
+              ? 'Emails do not match.'
+              : 'Please fill in all fields.'}
           </Text>
         </View>
       )}
 
       <View style={styles.formContainer}>
         {activeTab === 'signup' && (
-          <Input placeholder="Nombre" value={name} onChangeText={setName} />
+          <Input placeholder="Name" value={name} onChangeText={setName} />
         )}
 
         <Input
@@ -124,7 +125,7 @@ export default function LoginScreen() {
 
         {activeTab === 'signup' && (
           <Input
-            placeholder="Confirmar email"
+            placeholder="Confirm email"
             value={confirmEmail}
             onChangeText={setConfirmEmail}
             keyboardType="email-address"
@@ -133,7 +134,7 @@ export default function LoginScreen() {
         )}
 
         <Input
-          placeholder="Contraseña"
+          placeholder="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -143,20 +144,20 @@ export default function LoginScreen() {
           <CurrencySelector
             value={currency}
             onValueChange={setCurrency}
-            placeholder="Selecciona tu moneda"
+            placeholder="Select currency"
           />
         )}
 
         {activeTab === 'login' && (
           <TouchableOpacity onPress={handleForgotPassword}>
-            <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
+            <Text type="navyBlueText" size="smButton">¿Did you forget your password?</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.buttonContainer}>
         <StepButton
-          text={activeTab === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
+          text={activeTab === 'login' ? 'Login' : 'Sign-up'}
           onPress={activeTab === 'login' ? handleLogin : handleSignUp}
         />
       </View>
@@ -177,18 +178,12 @@ const styles = StyleSheet.create({
   formContainer: {
     width: '100%',
     maxWidth: 400,
-    marginBottom: 40,
+    marginBottom: 30,
   },
   buttonContainer: {
     width: '100%',
-    maxWidth: 400,
     alignItems: 'center',
-  },
-  forgotPassword: {
-    textAlign: 'left',
-    fontSize: 14,
-    color: '#3533cd',
-    marginTop: 10,
+    paddingHorizontal: 20,
   },
   errorMessage: {
     backgroundColor: '#ff4d4f1A',
