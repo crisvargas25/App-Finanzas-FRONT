@@ -6,6 +6,7 @@ import { useBudgets } from './hooks/useBudgets';
 import BudgetCard from './components/BudgetCard';
 import BudgetForm, { BudgetFormData } from './components/BudgetForm';
 import { Ionicons } from '@expo/vector-icons';
+import MainContainer from '../../components/common/containers/mainContainer';
 
 export default function BudgetScreen() {
   const {
@@ -84,7 +85,7 @@ export default function BudgetScreen() {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
+    <MainContainer>
       <Ionicons name="wallet-outline" size={64} color="#ccc" />
       <Text size="lg" type="grayText" style={styles.emptyTitle}>
         No hay presupuestos
@@ -95,12 +96,12 @@ export default function BudgetScreen() {
       <TouchableOpacity style={styles.emptyButton} onPress={handleAddBudget}>
         <Text size="sm" type="whiteText">Crear Presupuesto</Text>
       </TouchableOpacity>
-    </View>
+    </MainContainer>
   );
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
+      <MainContainer>
         <Ionicons name="alert-circle-outline" size={48} color="#F44336" />
         <Text size="lg" type="blackText" style={styles.errorTitle}>
           Error al cargar presupuestos
@@ -111,15 +112,15 @@ export default function BudgetScreen() {
         <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
           <Text size="sm" type="whiteText">Reintentar</Text>
         </TouchableOpacity>
-      </View>
+      </MainContainer>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text size="xl" type="blackText" style={styles.title}>
-          Presupuestos
+    <MainContainer>
+      <View>
+        <Text size="xl" type="blackText">
+          Budgets
         </Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddBudget}>
           <Ionicons name="add" size={24} color="#fff" />
@@ -148,28 +149,11 @@ export default function BudgetScreen() {
         budget={selectedBudget}
         loading={loading}
       />
-    </View>
+    </MainContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontWeight: 'bold',
-  },
   addButton: {
     backgroundColor: '#3533cd',
     width: 40,
