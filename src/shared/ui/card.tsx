@@ -4,6 +4,7 @@ import { View, ViewStyle, StyleSheet } from 'react-native';
 interface CardProps {
   children: React.ReactNode;
   variant?: 'elevated' | 'outlined' | 'filled';
+  backgroundColor?: string;
   className?: string;
   style?: ViewStyle;
   color?: string;

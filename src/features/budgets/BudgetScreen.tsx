@@ -1,11 +1,153 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { Text } from '../../shared/ui/text';
+import { Budget } from '../../shared/types';
+import { useBudgets } from './hooks/useBudgets';
+import BudgetCard from './components/BudgetCard';
+import BudgetForm, { BudgetFormData } from './components/BudgetForm';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function BudgetScreen() {
+  const {
+    budgets,
+    loading,
+    error,
+    createBudget,
+    updateBudget,
+    deleteBudget,
+    refreshBudgets,
+  } = useBudgets();
+
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleCreateBudget = async (data: BudgetFormData) => {
+    try {
+      await createBudget(data);
+      setIsFormVisible(false);
+      Alert.alert('Éxito', 'Presupuesto creado correctamente');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo crear el presupuesto');
+    }
+  };
+
+  const handleUpdateBudget = async (data: BudgetFormData) => {
+    if (!selectedBudget) return;
+    
+    try {
+      await updateBudget(selectedBudget.id, data);
+      setIsFormVisible(false);
+      setSelectedBudget(null);
+      Alert.alert('Éxito', 'Presupuesto actualizado correctamente');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo actualizar el presupuesto');
+    }
+  };
+
+  const handleDeleteBudget = async (budgetId: number) => {
+    try {
+      await deleteBudget(budgetId);
+      Alert.alert('Éxito', 'Presupuesto eliminado correctamente');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo eliminar el presupuesto');
+    }
+  };
+
+  const handleEditBudget = (budget: Budget) => {
+    setSelectedBudget(budget);
+    setIsFormVisible(true);
+  };
+
+  const handleAddBudget = () => {
+    setSelectedBudget(null);
+    setIsFormVisible(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormVisible(false);
+    setSelectedBudget(null);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshBudgets();
+    setRefreshing(false);
+  };
+
+  const renderBudgetCard = ({ item }: { item: Budget }) => (
+    <BudgetCard
+      budget={item}
+      onEdit={handleEditBudget}
+      onDelete={handleDeleteBudget}
+    />
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="wallet-outline" size={64} color="#ccc" />
+      <Text size="lg" type="grayText" style={styles.emptyTitle}>
+        No hay presupuestos
+      </Text>
+      <Text size="sm" type="grayText" style={styles.emptySubtitle}>
+        Crea tu primer presupuesto para comenzar a gestionar tus finanzas
+      </Text>
+      <TouchableOpacity style={styles.emptyButton} onPress={handleAddBudget}>
+        <Text size="sm" type="whiteText">Crear Presupuesto</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#F44336" />
+        <Text size="lg" type="blackText" style={styles.errorTitle}>
+          Error al cargar presupuestos
+        </Text>
+        <Text size="sm" type="grayText" style={styles.errorSubtitle}>
+          {error}
+        </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
+          <Text size="sm" type="whiteText">Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Presupuesto</Text>
-      <Text style={styles.subtitle}>Gestión de presupuestos</Text>
+      <View style={styles.header}>
+        <Text size="xl" type="blackText" style={styles.title}>
+          Presupuestos
+        </Text>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddBudget}>
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={budgets}
+        renderItem={renderBudgetCard}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={[
+          styles.listContainer,
+          budgets.length === 0 && styles.listContainerEmpty
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={renderEmptyState}
+      />
+
+      <BudgetForm
+        visible={isFormVisible}
+        onClose={handleCloseForm}
+        onSubmit={selectedBudget ? handleUpdateBudget : handleCreateBudget}
+        budget={selectedBudget}
+        loading={loading}
+      />
     </View>
   );
 }
@@ -13,17 +155,75 @@ export default function BudgetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
+  addButton: {
+    backgroundColor: '#3533cd',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listContainer: {
+    padding: 16,
+  },
+  listContainerEmpty: {
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: '#3533cd',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#F44336',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
 });

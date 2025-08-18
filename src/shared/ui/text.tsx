@@ -1,11 +1,12 @@
 import React from 'react';
 import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
 import { fonts, fontSizes, lineHeights } from '../../styles/typography';
+import { green, red } from 'react-native-reanimated/lib/typescript/Colors';
 
 interface TextProps {
   children: React.ReactNode;
   size?: 'xs' | 'sm' | 'smButton' | 'md' | 'lg' | 'xl' | '2xl';
-  type?: 'blackText' | 'whiteText' |'grayText' | 'navyBlueText' | 'cbBlueText';
+  type?: 'blackText' | 'whiteText' |'grayText' | 'navyBlueText' | 'cbBlueText' | 'redText' | 'greenText';
   align?: 'left' | 'center' | 'right';
   className?: string;
   style?: TextStyle;
@@ -57,6 +58,12 @@ const styles = StyleSheet.create({
   },
   cbBlueText: {
     color: '#3533cd',
+  },
+  redText: {
+    color: '#d9606cff',
+  },
+  greenText: {
+    color: '#9fdab5ff',
   },
 
   // Font sizes with associated weights

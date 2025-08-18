@@ -9,7 +9,7 @@ interface SolidButtonProps {
 function SolidButton({ text }: SolidButtonProps) {
   return (
     <Button variant="solid" action="primary" >
-          <Text size="smButton" type="whiteText">{text}</Text>
+          <Text size="smButton" type="whiteText" align="center">{text}</Text>
         </Button>
   );
 }

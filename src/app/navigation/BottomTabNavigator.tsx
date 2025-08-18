@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../../features/dashboard/DashboardScreen';
-import TransactionsScreen from '../../features/transactions/TransactionsScreen';
+import TransactionsScreen from '../../features/transactions/screens/TransactionsScreen';
 import BudgetScreen from '../../features/budgets/BudgetScreen';
 import SavingGoalScreen from '../../features/goals/components/SavingGoalScreen';
 

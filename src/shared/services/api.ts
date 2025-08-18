@@ -255,6 +255,76 @@ class ApiService {
     })
   }
 
+  // ========= ENDPOINTS DE TRANSACCIONES =========
+
+  /**
+   * Obtiene todas las transacciones del usuario autenticado
+   */
+  async getTransactions() {
+    return this.request<any[]>('/transactions', {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Crea una nueva transacción
+   */
+  async createTransaction(transactionData: {
+    tipo: 'income' | 'outcome';
+    monto: number;
+    categoria_id: number;
+    presupuesto_id?: number;
+    nota?: string;
+  }) {
+    return this.request<any>('/transactions', {
+      method: 'POST',
+      body: JSON.stringify(transactionData),
+    });
+  }
+
+  /**
+   * Actualiza una transacción existente
+   */
+  async updateTransaction(id: number, transactionData: {
+    tipo?: 'income' | 'outcome';
+    monto?: number;
+    categoria_id?: number;
+    presupuesto_id?: number;
+    nota?: string;
+  }) {
+    return this.request<any>(`/transactions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(transactionData),
+    });
+  }
+
+  /**
+   * Elimina una transacción
+   */
+  async deleteTransaction(id: number) {
+    return this.request<any>(`/transactions/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Obtiene todas las categorías disponibles
+   */
+  async getCategories() {
+    return this.request<any[]>('/categories', {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Obtiene todos los presupuestos del usuario
+   */
+  async getBudgets() {
+    return this.request<any[]>('/budgets', {
+      method: 'GET',
+    });
+  }
+
   // ========= SINCRONIZACIÓN =========
 
   async syncSensor(data: any) {

@@ -14,7 +14,7 @@ const styles: { organization: ViewStyle } = {
   organization: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 18,
+    marginTop: 20,
   },
 };
 

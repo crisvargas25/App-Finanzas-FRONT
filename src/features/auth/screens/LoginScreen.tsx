@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Alert, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import MainContainer from '../../../components/common/containers/mainContainer';
 import StepButton from '../../../components/common/buttons/StepButton';
 import Input from '../../../components/forms/input';
@@ -17,7 +18,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { login, signup } = useContext(AuthContext);
+  const { login, signup, setAuthenticatedState } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,19 +38,22 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please complete all fields.');
-      setErrorVisible(true);
-      return;
-    }
+    // Omitir validación para desarrollo - login directo
     try {
       setErrorVisible(false);
-      console.log('Attempting login with:', { email, password });
-      await login(email.trim(), password.trim());
-      Alert.alert('Éxito', 'Login success'); // Opcional: feedback
+      console.log('Skipping authentication - direct login');
+      
+      // Simulamos datos de autenticación para desarrollo
+      await AsyncStorage.setItem('auth_token', 'fake_token_for_development');
+      await AsyncStorage.setItem('user_id', 'fake_user_id');
+      
+      // Activamos directamente el estado de autenticación
+      setAuthenticatedState(true);
+      
+      Alert.alert('Éxito', 'Login success (development mode)');
     } catch (err: any) {
       console.error('Login error:', err.message);
-      Alert.alert('Error', err.message || 'Email or password is incorrect. Please try again.');
+      Alert.alert('Error', 'Something went wrong.');
       setErrorVisible(true);
     }
   };

@@ -9,12 +9,14 @@ import { apiService } from '../services/api';
  * `login` recibe credenciales, llama a la API y guarda el token.
  * `signup` recibe datos de usuario, crea una nueva cuenta y guarda el token.
  * `logout` borra las credenciales y restablece el estado.
+ * `setAuthenticatedState` permite forzar el estado de autenticación (para desarrollo).
  */
 type AuthContextType = {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (userData: { name: string; email: string; password: string; currency: string }) => Promise<void>;
   logout: () => Promise<void>;
+  setAuthenticatedState: (authenticated: boolean) => void;
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -23,6 +25,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   signup: async () => {},
   logout: async () => {},
+  setAuthenticatedState: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -65,8 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
   };
 
+  /**
+   * Permite forzar el estado de autenticación (útil para desarrollo/testing)
+   */
+  const setAuthenticatedState = (authenticated: boolean) => {
+    setIsAuthenticated(authenticated);
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, signup, logout, setAuthenticatedState }}>
       {children}
     </AuthContext.Provider>
   );
