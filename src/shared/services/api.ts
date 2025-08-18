@@ -12,9 +12,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // Obtén la URL base de la API desde las variables de entorno de Expo.
 // Debes definir `EXPO_PUBLIC_API_URL` en tu entorno (por ejemplo en app.json
 // dentro de `extra`). Si no se define, utiliza un valor por defecto.
+import { Platform } from 'react-native';
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || process.env.API_BASE_URL ||
-  'http://localhost:4000/api'
+  (Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : 'http://localhost:4000/api');
 
 // In production builds the base URL should not be logged to avoid leaking
 // configuration details.  Use the DEBUG flag to enable logging when
@@ -88,35 +89,42 @@ class ApiService {
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
     
-    // Optionally log request details when debugging.  Remove or guard
-    // behind a runtime check in production.
+    console.log('Sending request to:', fullUrl); // Log de la URL completa
+    console.log('Request config:', config); // Log de la configuración (incluye body)
 
-    const response = await fetch(fullUrl, config)
+    try {
+      const response = await fetch(fullUrl, config);
 
-    // Optionally log response details when debugging.
+      const responseBody = await response.text(); // Lee como texto para manejar no-JSON
+      console.log('Response status:', response.status); // Log del estado
+      console.log('Response body:', responseBody); // Log del cuerpo completo
 
-    // Si el token es inválido o expiró, borra credenciales y lanza error
-    if (response.status === 401) {
-      // Token inválido o expirado, se maneja en handleUnauthorized
-      await this.handleUnauthorized()
-      throw new Error('Token expirado')
-    }
-
-    // Lanza un error si la respuesta no es exitosa
-    if (!response.ok) {
-      let errorMessage = `API Error: ${response.status}`
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch {
-        // Ignora error de parseo de JSON y usa mensaje por defecto
+      // Si el token es inválido o expiró, borra credenciales y lanza error
+      if (response.status === 401) {
+        await this.handleUnauthorized()
+        throw new Error('Token expirado o credenciales inválidas');
       }
-      throw new Error(errorMessage)
-    }
 
-    // Devuelve la respuesta como JSON tipado
-    const jsonResponse = await response.json();
-    return jsonResponse as T;
+      // Lanza un error si la respuesta no es exitosa
+      if (!response.ok) {
+        let errorMessage = `API Error: ${response.status}`;
+        try {
+          const errorData = JSON.parse(responseBody);
+          console.error('Server error details:', errorData); // Log del error del servidor
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          console.error('Failed to parse error response as JSON:', responseBody);
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Devuelve la respuesta como JSON tipado
+      const jsonResponse = JSON.parse(responseBody);
+      return jsonResponse as T;
+    } catch (err) {
+      console.error('Fetch network error:', err); // Log de errores de red (ej. no conexión)
+      throw err; // Re-lanza para que se maneje en el caller
+    }
   }
 
   // ========= ENDPOINTS DE AUTENTICACIÓN =========
@@ -125,9 +133,50 @@ class ApiService {
    * Inicia sesión. No necesita token previo.
    * Almacena el token y el id de usuario en AsyncStorage.
    */
-    async login(email: string, password: string) {
+  async login(email: string, password: string) {
     const requestBody = { email, password };
-    console.log('Request body:', requestBody); // Verifica los datos enviados
+    console.log('Login request body:', requestBody); // Verifica los datos enviados
+    try {
+      const result = await this.request<{
+        message: string;
+        token: string;
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          role: { type: 'admin' | 'user' | 'client' }[];
+        };
+      }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+        },
+        false,
+      );
+      console.log('Login response:', result); // Verifica la respuesta del servidor
+      await AsyncStorage.setItem('auth_token', result.token);
+      await AsyncStorage.setItem('user_id', result.user.id);
+      console.log('Stored token:', result.token); // Confirma que se guardó
+      return result;
+    } catch (err) {
+      console.error('Login failed:', err); // Log del error completo en login
+      throw err;
+    }
+  }
+
+  /**
+   * Registra un nuevo usuario. No necesita token previo.
+   * Almacena el token y el id de usuario en AsyncStorage.
+   */
+    async signup(userData: { name: string; email: string; password: string; currency: string }) {
+    const requestBody = {
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        currency: userData.currency,
+        role: [{ type: "user" }], // Auto-asigna rol "user" por defecto
+    };
     const result = await this.request<{
         message: string;
         token: string;
@@ -135,55 +184,21 @@ class ApiService {
         id: string;
         name: string;
         email: string;
-        role: { type: 'admin' | 'user' | 'client' }[];
+        role: { type: 'user'}[];
         };
     }>(
-        '/auth/login',
+        '/users/register', // Asegúrate de que este endpoint sea correcto
         {
         method: 'POST',
         body: JSON.stringify(requestBody),
         },
         false,
     );
-    console.log('Response:', result); // Verifica la respuesta del servidor
+
     await AsyncStorage.setItem('auth_token', result.token);
     await AsyncStorage.setItem('user_id', result.user.id);
     return result;
     }
-
-  /**
-   * Registra un nuevo usuario. No necesita token previo.
-   * Almacena el token y el id de usuario en AsyncStorage.
-   */
-  async signup(userData: { name: string; email: string; password: string; currency: string }) {
-    const requestBody = {
-      name: userData.name,
-      email: userData.email,
-      password: userData.password,
-      currency: userData.currency,
-    };
-    const result = await this.request<{
-      message: string;
-      token: string;
-      user: {
-        id: string;
-        name: string;
-        email: string;
-        role: { type: 'admin' | 'user' | 'client' }[];
-      };
-    }>(
-      '/user/register',
-      {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-      },
-      false,
-    );
-
-    await AsyncStorage.setItem('auth_token', result.token);
-    await AsyncStorage.setItem('user_id', result.user.id);
-    return result;
-  }
 
   /**
    * Obtiene la hora del servidor (no requiere autenticación).
@@ -217,13 +232,6 @@ class ApiService {
 
   async getUserById(id: string) {
     return this.request(`/user/get/${id}`)
-  }
-
-  async createUser(data: any) {
-    return this.request('/user/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
   }
 
   async updateUser(id: string, data: any) {

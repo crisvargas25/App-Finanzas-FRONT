@@ -1,5 +1,8 @@
 {
   "expo": {
+    "extra": {
+      "EXPO_PUBLIC_API_URL": "http://localhost:4000/api"
+    },
     "name": "cashbook-front",
     "slug": "cashbook-front",
     "version": "1.0.0",

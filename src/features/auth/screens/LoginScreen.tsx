@@ -36,16 +36,19 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Por favor completa ambos campos');
       setErrorVisible(true);
       return;
     }
     try {
       setErrorVisible(false);
-      await login(email, password);
+      console.log('Attempting login with:', { email, password });
+      await login(email.trim(), password.trim());
+      Alert.alert('Éxito', 'Inicio de sesión exitoso'); // Opcional: feedback
     } catch (err: any) {
-      Alert.alert('Error', 'Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.');
+      console.error('Login error:', err.message);
+      Alert.alert('Error', err.message || 'Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.');
       setErrorVisible(true);
     }
   };
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   errorMessage: {
-    backgroundColor: '#ff4d4f1A', // Light red with opacity
+    backgroundColor: '#ff4d4f1A',
     borderLeftWidth: 3,
     borderLeftColor: '#ff4d4f',
     borderRadius: 5,

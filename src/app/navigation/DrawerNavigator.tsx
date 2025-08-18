@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '../../features/profile/ProfileScreen';
 import SettingsScreen from '../../features/SettingsScreens';
-import AboutScreen from '../../features/AboutScreen'; // Add this screen
+import AboutScreen from '../../features/AboutScreen';
 import { DrawerParamList } from './types';
+import { AuthContext } from '../../shared/contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from './AppNavigator'; // Asegúrate de importar RootStackParamList
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -22,6 +26,25 @@ const LogoTitle = () => {
 };
 
 export default function DrawerNavigator() {
+  const { logout } = useContext(AuthContext);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  const handleLogout = () => {
+    Alert.alert('Cerrar Sesión', '¿Estás seguro?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Confirmar',
+        onPress: async () => {
+          await logout();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Auth' }],
+          });
+        },
+      },
+    ]);
+  };
+
   return (
     <Drawer.Navigator
       screenOptions={{
@@ -41,6 +64,11 @@ export default function DrawerNavigator() {
           fontWeight: '600',
           fontSize: 12,
         },
+        headerRight: () => (
+          <TouchableOpacity onPress={handleLogout} style={{ marginRight: 15 }}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        ),
       }}
     >
       <Drawer.Screen
