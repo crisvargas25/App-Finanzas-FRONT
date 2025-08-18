@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '../../features/profile/ProfileScreen';
-import SettingsScreen from '../../features/SettingsScreens';
 import AboutScreen from '../../features/AboutScreen';
 import { DrawerParamList } from './types';
 import { AuthContext } from '../../shared/contexts/AuthContext';
