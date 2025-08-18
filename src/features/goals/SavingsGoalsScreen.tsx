@@ -5,7 +5,7 @@ import GoalItem from './GoalItem';
 import AddGoalModal from './AddGoalModal';
 import AddContributionModal from './AddContributionModal';
 import { Ionicons } from '@expo/vector-icons';
-import { Goal } from '../../../shared/types'; // Adjust path to your types file if different
+import { Goal } from '../../shared/types'; // Adjust path to your types file if different
 
 // Mock backend functions - replace these with actual API calls later
 const fetchGoals = async (): Promise<Omit<Goal, 'status' | 'daysOverdue'>[]> => {
@@ -152,7 +152,6 @@ const SavingsGoalsScreen: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 50 }}
       />
 
-
       <AddGoalModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#3533cd',
+    color: '#3533cd', // Cambiado de #3533cd a negro
     marginBottom: 5,
   },
   subtitle: {
@@ -188,9 +187,9 @@ const styles = StyleSheet.create({
   },
   newGoalButton: {
     flexDirection: 'row',
-    backgroundColor: '#3533cd',
+    backgroundColor: '#22c55e', // Cambiado a verde como en CategoriesScreen
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 20, // Ajustado para mayor redondeo como en CategoriesScreen
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -213,15 +212,13 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3533cd',
+    color: '#3533cd', // Cambiado de #3533cd a negro
   },
   emptySection: {
     fontSize: 14,
     color: '#999',
     marginTop: 4,
   },
-
-  
 });
 
 export default SavingsGoalsScreen;
