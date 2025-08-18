@@ -1,8 +1,7 @@
-// components/GoalItem.tsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Goal } from '../../../shared/types'; 
+import { Goal } from '../../shared/types'; 
 
 interface GoalItemProps {
   goal: Goal;
@@ -37,6 +36,17 @@ const GoalItem: React.FC<GoalItemProps> = ({ goal, onEdit, onDelete, onAddContri
       break;
   }
 
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete Goal',
+      'Are you sure you want to delete this goal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -45,7 +55,7 @@ const GoalItem: React.FC<GoalItemProps> = ({ goal, onEdit, onDelete, onAddContri
           <TouchableOpacity onPress={onEdit}>
             <Ionicons name="create-outline" size={20} color="#3533cd" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={onDelete}>
+          <TouchableOpacity onPress={confirmDelete}>
             <Ionicons name="trash-outline" size={20} color="#f44336" style={styles.deleteIcon} />
           </TouchableOpacity>
         </View>

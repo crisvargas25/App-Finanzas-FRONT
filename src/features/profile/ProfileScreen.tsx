@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { User } from '../../shared/types'; 
 import EditProfileModal from './EditProfileModal';
 import DeleteAccountModal from './DeleteAccountModal';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const defaultAvatar = require('../../../assets/imgs/profile.jpeg');
 
@@ -30,10 +31,16 @@ const deleteUserAccount = async (userId: string): Promise<void> => {
   console.log('Deleted user:', userId);
 };
 
+const changePassword = async (userId: string, newPassword: string): Promise<void> => {
+  console.log('Changed password for user:', userId, 'to:', newPassword);
+  // Simulate API call
+};
+
 const ProfileScreen: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [changePasswordVisible, setChangePasswordVisible] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -57,6 +64,14 @@ const ProfileScreen: React.FC = () => {
       await deleteUserAccount(user._id);
       setDeleteModalVisible(false);
       Alert.alert('Success', 'Account deleted successfully');
+    }
+  };
+
+  const handleChangePassword = async (newPassword: string) => {
+    if (user?._id) {
+      await changePassword(user._id, newPassword);
+      setChangePasswordVisible(false);
+      Alert.alert('Success', 'Password changed successfully');
     }
   };
 
@@ -100,6 +115,10 @@ const ProfileScreen: React.FC = () => {
           <Ionicons name="create-outline" size={20} color="#fff" style={styles.actionIcon} />
           <Text style={styles.actionText}>Edit Profile</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.changePasswordButton} onPress={() => setChangePasswordVisible(true)}>
+          <Ionicons name="key-outline" size={20} color="#fff" style={styles.actionIcon} />
+          <Text style={styles.actionText}>Change Password</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.deleteButton} onPress={() => setDeleteModalVisible(true)}>
           <Ionicons name="trash-outline" size={20} color="#fff" style={styles.actionIcon} />
           <Text style={styles.actionText}>Delete Account</Text>
@@ -116,6 +135,11 @@ const ProfileScreen: React.FC = () => {
         visible={deleteModalVisible}
         onClose={() => setDeleteModalVisible(false)}
         onConfirm={handleDeleteAccount}
+      />
+      <ChangePasswordModal
+        visible={changePasswordVisible}
+        onClose={() => setChangePasswordVisible(false)}
+        onSave={handleChangePassword}
       />
     </ScrollView>
   );
@@ -182,6 +206,14 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     backgroundColor: '#22c55e',
+    padding: 15,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  changePasswordButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3b82f6', // Azul para diferenciar
     padding: 15,
     borderRadius: 20,
     alignItems: 'center',
