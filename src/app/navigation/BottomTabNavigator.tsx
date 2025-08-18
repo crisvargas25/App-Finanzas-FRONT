@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../../features/dashboard/DashboardScreen';
 import TransactionsScreen from '../../features/transactions/TransactionsScreen';
 import BudgetScreen from '../../features/budgets/BudgetScreen';
-import GoalsScreen from '../../features/goals/GoalsViewScreen';
+import SavingsGoalsScreen from '../../features/goals/SavingsGoalsScreen';
 
 export type BottomTabParamList = {
   Dashboard: undefined;
@@ -74,7 +74,7 @@ export default function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Goals"
-        component={GoalsScreen}
+        component={SavingsGoalsScreen}
         options={{ tabBarLabel: 'Goals' }}
       />
     </Tab.Navigator>

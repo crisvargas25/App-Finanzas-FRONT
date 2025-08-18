@@ -12,7 +12,7 @@ import { apiService } from '../services/api';
  */
 type AuthContextType = {
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+login: (email: string, password: string, isMock?: boolean) => Promise<void>;
   signup: (userData: { name: string; email: string; password: string; currency: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -41,8 +41,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Maneja el proceso de inicio de sesión.
    * Llama al endpoint de login, guarda credenciales y actualiza el contexto.
    */
-  const login = async (email: string, password: string) => {
-    // apiService.login se encarga de guardar el token e id en AsyncStorage
+  const login = async (email: string, password: string, isMock = false) => {
+    if (isMock) {
+      // Simula usuario autenticado sin tocar el backend
+      await AsyncStorage.setItem('auth_token', 'mock_token_123');
+      await AsyncStorage.setItem('user_id', 'mock_user_123');
+      setIsAuthenticated(true);
+      return;
+    }
+
+    // login real contra la API
     await apiService.login(email, password);
     setIsAuthenticated(true);
   };

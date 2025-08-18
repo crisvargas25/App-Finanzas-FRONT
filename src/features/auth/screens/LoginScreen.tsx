@@ -1,80 +1,27 @@
-import React, { useState, useContext } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Alert, Text, Dimensions } from 'react-native';
+import React, { useContext } from 'react';
+import { View, StyleSheet, TouchableOpacity, Image, Text, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MainContainer from '../../../components/common/containers/mainContainer';
 import StepButton from '../../../components/common/buttons/StepButton';
-import Input from '../../../components/forms/input';
-import CurrencySelector from '../../../components/forms/currencySelector';
-import TabSwitcher from '../hooks/tabSwitcher';
 import { AuthContext } from '../../../shared/contexts/AuthContext';
 import { AuthStackParamList } from '../../../app/navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
-
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { login, signup } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [confirmEmail, setConfirmEmail] = useState('');
-  const [currency, setCurrency] = useState('');
-  const [errorVisible, setErrorVisible] = useState(false);
+  const { login } = useContext(AuthContext);
 
-  const handleTabChange = (tab: 'login' | 'signup') => {
-    setActiveTab(tab);
-    setEmail('');
-    setPassword('');
-    setName('');
-    setConfirmEmail('');
-    setCurrency('');
-    setErrorVisible(false);
-  };
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa ambos campos');
-      setErrorVisible(true);
-      return;
-    }
+  const handleQuickLogin = async () => {
     try {
-      setErrorVisible(false);
-      await login(email, password);
-    } catch (err: any) {
-      Alert.alert('Error', 'Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.');
-      setErrorVisible(true);
+      await login('user@dev.com', '123', true); // <-- true activa el modo simulado
+    } catch (err) {
+      console.error('Error al iniciar sesión rápida', err);
     }
   };
 
-  const handleSignUp = async () => {
-    if (!name || !email || !confirmEmail || !password || !currency) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
-      setErrorVisible(true);
-      return;
-    }
-    if (email !== confirmEmail) {
-      Alert.alert('Error', 'Los correos electrónicos no coinciden');
-      setErrorVisible(true);
-      return;
-    }
-    try {
-      setErrorVisible(false);
-      await signup({ name, email, password, currency });
-      Alert.alert('Éxito', 'Cuenta creada correctamente');
-      handleTabChange('login');
-    } catch (err: any) {
-      Alert.alert('Error', 'No se pudo crear la cuenta. Inténtalo de nuevo.');
-      setErrorVisible(true);
-    }
-  };
-
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgetPass');
-  };
 
   return (
     <MainContainer>
@@ -86,70 +33,15 @@ export default function LoginScreen() {
         />
       </View>
 
-      <TabSwitcher onTabChange={handleTabChange} activeTab={activeTab} />
-
-      {errorVisible && (
-        <View style={styles.errorMessage}>
-          <Text style={styles.errorText}>
-            {activeTab === 'login'
-              ? 'Correo electrónico o contraseña incorrectos.'
-              : activeTab === 'signup' && email !== confirmEmail
-              ? 'Los correos electrónicos no coinciden.'
-              : 'Por favor completa todos los campos.'}
-          </Text>
-        </View>
-      )}
-
       <View style={styles.formContainer}>
-        {activeTab === 'signup' && (
-          <Input placeholder="Nombre" value={name} onChangeText={setName} />
-        )}
-
-        <Input
-          placeholder="email@gmail.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        {activeTab === 'signup' && (
-          <Input
-            placeholder="Confirmar email"
-            value={confirmEmail}
-            onChangeText={setConfirmEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        )}
-
-        <Input
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        {activeTab === 'signup' && (
-          <CurrencySelector
-            value={currency}
-            onValueChange={setCurrency}
-            placeholder="Selecciona tu moneda"
-          />
-        )}
-
-        {activeTab === 'login' && (
-          <TouchableOpacity onPress={handleForgotPassword}>
-            <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-        )}
+        <Text style={styles.infoText}>
+          Inicio de sesión deshabilitado para desarrollo. 
+          Presiona el botón para entrar con usuario fijo.
+        </Text>
       </View>
 
       <View style={styles.buttonContainer}>
-        <StepButton
-          text={activeTab === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
-          onPress={activeTab === 'login' ? handleLogin : handleSignUp}
-        />
+        <StepButton text="Entrar como user:123" onPress={handleQuickLogin} />
       </View>
     </MainContainer>
   );
@@ -169,30 +61,16 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   buttonContainer: {
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
   },
-  forgotPassword: {
-    textAlign: 'left',
-    fontSize: 14,
-    color: '#3533cd',
-    marginTop: 10,
-  },
-  errorMessage: {
-    backgroundColor: '#ff4d4f1A', // Light red with opacity
-    borderLeftWidth: 3,
-    borderLeftColor: '#ff4d4f',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  errorText: {
-    color: '#ff4d4f',
-    fontSize: 14,
+  infoText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#555',
   },
 });
