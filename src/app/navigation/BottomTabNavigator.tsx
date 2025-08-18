@@ -4,13 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../../features/dashboard/DashboardScreen';
 import TransactionsScreen from '../../features/transactions/screens/TransactionsScreen';
 import BudgetScreen from '../../features/budgets/BudgetScreen';
-import SavingGoalScreen from '../../features/goals/components/SavingGoalScreen';
+import SavingGoalScreen from '../../features/goals/SavingsGoalsScreen';
+import CategoriesScreen from '../../features/categories/CategoriesScreen';
 
 export type BottomTabParamList = {
   Dashboard: undefined;
   Transactions: undefined;
   Budget: undefined;
   Goals: undefined;
+  Categories: undefined;
 };
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -34,6 +36,9 @@ export default function BottomTabNavigator() {
               break;
             case 'Goals':
               iconName = focused ? 'star' : 'star-outline';
+              break;
+            case 'Categories':
+              iconName = focused ? 'pricetag' : 'pricetag-outline';
               break;
             default:
               iconName = 'home-outline';
@@ -76,6 +81,11 @@ export default function BottomTabNavigator() {
         name="Goals"
         component={SavingGoalScreen}
         options={{ tabBarLabel: 'Goals' }}
+      />
+      <Tab.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{ tabBarLabel: 'Categories' }}
       />
     </Tab.Navigator>
   );

@@ -1,7 +1,11 @@
 // Aqui tendremos los tipos globales compartidos de la aplicacion
 
 // ===== Role =====
-export type RoleType = 'user' | 'admin';
+// Usamos el mismo enum que el backend para consistencia
+export enum RoleType {
+  USER = 'user',
+  ADMIN = 'admin',
+}
 
 export interface Role {
   type: RoleType;
@@ -9,17 +13,16 @@ export interface Role {
 
 // ===== User =====
 export interface User {
-  _id?: string;
-  id?: string;
+  _id: string; // Obligatorio, elimina id?: string
   name: string;
   email: string;
   password: string;
-  role: Role[];
-  creationDate?: string;
-  deleteDate?: string;
+  role: Role[]; // Array de roles, obligatorio
+  creationDate: Date; // Obligatorio, usa Date
+  deleteDate?: Date; // Opcional, usa Date
   status: boolean;
+  currency: 'USD' | 'MXN' | 'EUR' | 'GBP'; // Agregado para coincidir con el modelo
 }
-
 // ===== Menu =====
 export interface Menu {
   _id?: string;
