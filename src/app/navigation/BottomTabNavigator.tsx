@@ -5,6 +5,7 @@ import DashboardScreen from '../../features/dashboard/DashboardScreen';
 import TransactionsScreen from '../../features/transactions/TransactionsScreen';
 import BudgetScreen from '../../features/budgets/BudgetScreen';
 import SavingsGoalsScreen from '../../features/goals/SavingsGoalsScreen';
+import CategoriesScreen from '../../features/categories/CategoriesScreen';
 
 export type BottomTabParamList = {
   Dashboard: undefined;
@@ -34,6 +35,9 @@ export default function BottomTabNavigator() {
               break;
             case 'Goals':
               iconName = focused ? 'star' : 'star-outline';
+              break;
+            case 'Categories':
+              iconName = focused ? 'pricetag' : 'pricetag-outline';
               break;
             default:
               iconName = 'home-outline';
@@ -76,6 +80,11 @@ export default function BottomTabNavigator() {
         name="Goals"
         component={SavingsGoalsScreen}
         options={{ tabBarLabel: 'Goals' }}
+      />
+      <Tab.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{ tabBarLabel: 'Categories' }}
       />
     </Tab.Navigator>
   );
