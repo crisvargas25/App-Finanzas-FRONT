@@ -30,3 +30,15 @@ export interface Menu {
   roles: Role[];
   status: boolean;
 }
+
+
+// ===== goal =====
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  status?: 'overdue' | 'in_progress' | 'completed';
+  daysOverdue?: number;
+}
