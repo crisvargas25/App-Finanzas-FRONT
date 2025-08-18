@@ -60,73 +60,68 @@ class ApiService {
    * @param options Opciones de fetch (método, cuerpo, cabeceras, etc.)
    * @param authRequired Si se necesita token para esta petición
    */
-  private async request<T>(
+    private async request<T>(
     endpoint: string,
     options: RequestInit = {},
     authRequired = true,
-  ): Promise<T> {
-    let token: string | null = null
+    ): Promise<T> {
+    let token: string | null = null;
 
     if (authRequired) {
-      token = await AsyncStorage.getItem('auth_token')
-      if (token) {
-        // Intenta refrescar el token antes de cada petición autenticada
-        await this.updateTokenIfNeeded()
-      }
+        token = await AsyncStorage.getItem('auth_token');
+        if (token) {
+        await this.updateTokenIfNeeded();
+        }
     }
 
     const headers: Record<string, any> = {
-      'Content-Type': 'application/json',
-      ...(authRequired && token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    }
+        'Content-Type': 'application/json',
+        ...(authRequired && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+    };
 
-    // Construye la configuración final para fetch
     const config: RequestInit = {
-      ...options,
-      headers,
-    }
+        ...options,
+        headers,
+    };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
     
-    console.log('Sending request to:', fullUrl); // Log de la URL completa
-    console.log('Request config:', config); // Log de la configuración (incluye body)
+    console.log('Sending request to:', fullUrl);
+    console.log('Request config:', config);
 
     try {
-      const response = await fetch(fullUrl, config);
+        const response = await fetch(fullUrl, config);
 
-      const responseBody = await response.text(); // Lee como texto para manejar no-JSON
-      console.log('Response status:', response.status); // Log del estado
-      console.log('Response body:', responseBody); // Log del cuerpo completo
+        const responseBody = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response body:', responseBody);
 
-      // Si el token es inválido o expiró, borra credenciales y lanza error
-      if (response.status === 401) {
-        await this.handleUnauthorized()
+        if (response.status === 401) {
+        await this.handleUnauthorized();
         throw new Error('Token expirado o credenciales inválidas');
-      }
+        }
 
-      // Lanza un error si la respuesta no es exitosa
-      if (!response.ok) {
+        // Acepta 201 como exitoso además de 200-299
+        if (!response.ok && response.status !== 201) {
         let errorMessage = `API Error: ${response.status}`;
         try {
-          const errorData = JSON.parse(responseBody);
-          console.error('Server error details:', errorData); // Log del error del servidor
-          errorMessage = errorData.message || errorMessage;
+            const errorData = JSON.parse(responseBody);
+            console.error('Server error details:', errorData);
+            errorMessage = errorData.message || errorMessage;
         } catch {
-          console.error('Failed to parse error response as JSON:', responseBody);
+            console.error('Failed to parse error response as JSON:', responseBody);
         }
         throw new Error(errorMessage);
-      }
+        }
 
-      // Devuelve la respuesta como JSON tipado
-      const jsonResponse = JSON.parse(responseBody);
-      return jsonResponse as T;
+        const jsonResponse = JSON.parse(responseBody);
+        return jsonResponse as T;
     } catch (err) {
-      console.error('Fetch network error:', err); // Log de errores de red (ej. no conexión)
-      throw err; // Re-lanza para que se maneje en el caller
+        console.error('Fetch network error:', err);
+        throw err;
     }
-  }
-
+    }
   // ========= ENDPOINTS DE AUTENTICACIÓN =========
 
   /**
@@ -179,15 +174,15 @@ class ApiService {
     };
     const result = await this.request<{
         message: string;
-        token: string;
         user: {
         id: string;
         name: string;
         email: string;
-        role: { type: 'user'}[];
+        role: { type: 'user' }[];
+        status: boolean;
         };
     }>(
-        '/users/register', // Asegúrate de que este endpoint sea correcto
+        '/users/register',
         {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -195,8 +190,7 @@ class ApiService {
         false,
     );
 
-    await AsyncStorage.setItem('auth_token', result.token);
-    await AsyncStorage.setItem('user_id', result.user.id);
+    // No guardamos token ni user_id, solo retornamos el resultado
     return result;
     }
 

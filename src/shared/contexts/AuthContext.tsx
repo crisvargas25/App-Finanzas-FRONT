@@ -52,9 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Llama al endpoint de signup, guarda credenciales y actualiza el contexto.
    */
   const signup = async (userData: { name: string; email: string; password: string; currency: string }) => {
-    // apiService.signup se encarga de guardar el token e id en AsyncStorage
     await apiService.signup(userData);
-    setIsAuthenticated(true);
+    // No cambiamos setIsAuthenticated(true) aquí
   };
 
   /**

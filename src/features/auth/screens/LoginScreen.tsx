@@ -68,9 +68,15 @@ export default function LoginScreen() {
       setErrorVisible(false);
       await signup({ name, email, password, currency });
       Alert.alert('Éxito', 'Cuenta creada correctamente');
-      handleTabChange('login');
+      // No cambiamos a la pestaña de login ni seteamos isAuthenticated
+      setName(''); // Opcional: limpia los campos
+      setEmail('');
+      setConfirmEmail('');
+      setPassword('');
+      setCurrency('');
     } catch (err: any) {
-      Alert.alert('Error', 'No se pudo crear la cuenta. Inténtalo de nuevo.');
+      console.error('Signup error:', err.message);
+      Alert.alert('Error', err.message || 'No se pudo crear la cuenta. Inténtalo de nuevo.');
       setErrorVisible(true);
     }
   };

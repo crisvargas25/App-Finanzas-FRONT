@@ -1,5 +1,3 @@
-// src/shared/types/auth.types.ts
-
 export type AuthTab = 'login' | 'signup';
 
 export interface SignUpData {
@@ -7,6 +5,7 @@ export interface SignUpData {
   email: string;
   password: string;
   currency: string;
+  role?: { type: 'user'}[]; // Opcional, pero refleja el cuerpo enviado
 }
 
 export interface UseAuthFormReturn {
