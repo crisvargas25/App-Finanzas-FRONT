@@ -30,10 +30,10 @@ export default function DrawerNavigator() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleLogout = () => {
-    Alert.alert('Cerrar Sesión', '¿Estás seguro?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert('Log out', '¿Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Confirmar',
+        text: 'Confirm',
         onPress: async () => {
           await logout();
           navigation.reset({
@@ -87,21 +87,10 @@ export default function DrawerNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Perfil',
-          drawerLabel: 'Mi Perfil',
+          title: 'Profile',
+          drawerLabel: 'My Profile',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: 'Configuración',
-          drawerLabel: 'Configuración',
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />
@@ -109,8 +98,8 @@ export default function DrawerNavigator() {
         name="About"
         component={AboutScreen}
         options={{
-          title: 'Acerca de',
-          drawerLabel: 'Acerca de',
+          title: 'About',
+          drawerLabel: 'About',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="information-circle-outline" size={size} color={color} />
           ),
