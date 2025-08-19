@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native';
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || process.env.API_BASE_URL ||
-  (Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : 'http://192.168.1.86:4000/api');
+  (Platform.OS === "android" ? "http://10.0.2.2:4000/api" : "http://192.168.3.149:4000/api");
 
 // In production builds the base URL should not be logged to avoid leaking
 // configuration details.  Use the DEBUG flag to enable logging when
@@ -121,7 +121,10 @@ class ApiService {
         console.error('Fetch network error:', err);
         throw err;
     }
+
+    
     }
+    
   // ========= ENDPOINTS DE AUTENTICACIÓN =========
 
   /**
@@ -255,15 +258,80 @@ class ApiService {
     })
   }
 
-  // ========= SINCRONIZACIÓN =========
+  
+  // ====== GOALS (Cloud API) ======
 
-  async syncSensor(data: any) {
-    return this.request('/sync/sync-sensor', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-  }
+// GET metas desde el backend (Mongo). Devuelve un array.
+async listGoalsFromCloud(userServerId: string) {
+  return this.request<Array<{
+    _id: string;
+    userId: string;
+    nombreMeta: string;
+    montoObjetivo: number;
+    montoActual: number;
+    fechaMeta: string;    // ISO o YYYY-MM-DD
+    estado?: 'en_progreso' | 'cumplida' | 'cancelada';
+    updatedAt?: string;
+  }>>(`/saving-goals/getall?userId=${encodeURIComponent(userServerId)}`);
 }
+
+// Crear meta en backend → devuelve _id de Mongo
+async createGoalInCloud(input: {
+  userId: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  status?: 'en_progreso' | 'cumplida' | 'cancelada';
+}) {
+  const body = {
+    userId: input.userId,
+    nombreMeta: input.name,
+    montoObjetivo: input.targetAmount,
+    montoActual: input.currentAmount,
+    fechaMeta: input.deadline,
+    estado: input.status,
+  };
+  const res = await this.request<{ message: string; savingGoal: { _id: string } }>(
+    `/saving-goals/create`,
+    { method: 'POST', body: JSON.stringify(body) }
+  );
+  return res.savingGoal._id;
+}
+
+// Actualizar meta en backend
+async updateGoalInCloud(serverId: string, patch: {
+  name?: string;
+  targetAmount?: number;
+  currentAmount?: number;
+  deadline?: string;
+  status?: 'en_progreso' | 'cumplida' | 'cancelada';
+}) {
+  const body = {
+    ...(patch.name != null ? { nombreMeta: patch.name } : {}),
+    ...(patch.targetAmount != null ? { montoObjetivo: patch.targetAmount } : {}),
+    ...(patch.currentAmount != null ? { montoActual: patch.currentAmount } : {}),
+    ...(patch.deadline != null ? { fechaMeta: patch.deadline } : {}),
+    ...(patch.status != null ? { estado: patch.status } : {}),
+  };
+  await this.request<{ message: string }>(
+    `/saving-goals/update/${encodeURIComponent(serverId)}`,
+    { method: 'PUT', body: JSON.stringify(body) }
+  );
+}
+
+// Eliminar meta en backend
+async deleteGoalInCloud(serverId: string) {
+  return this.request<{ message: string }>(
+    `/saving-goals/delete/${encodeURIComponent(serverId)}`,
+    { method: 'DELETE' }
+  );
+}
+
+
+  }
+
+
 
 // Instancia única del servicio API
 export const apiService = new ApiService()

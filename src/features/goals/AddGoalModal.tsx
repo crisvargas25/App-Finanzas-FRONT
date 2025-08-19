@@ -74,7 +74,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({
     const goal = {
       name: name.trim(),
       targetAmount: parseFloat(targetAmount),
-      deadline: formatLocalYYYYMMDD(deadline), // YYYY-MM-DD estable
+      deadline: formatLocalYYYYMMDD(deadline),
       ...(initialData && {
         id: initialData.id,
         currentAmount: initialData.currentAmount,

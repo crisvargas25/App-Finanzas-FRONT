@@ -1,49 +1,54 @@
-// screens/SavingsGoalsScreen.tsx
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SectionList, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, SectionList, StyleSheet, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import GoalItem from './GoalItem';
 import AddGoalModal from './AddGoalModal';
 import AddContributionModal from './AddContributionModal';
-import { Ionicons } from '@expo/vector-icons';
-import { Goal } from '../../shared/types'; // Adjust path to your types file if different
 
-// Mock backend functions - replace these with actual API calls later
-const fetchGoals = async (): Promise<Omit<Goal, 'status' | 'daysOverdue'>[]> => {
-  return [
-    { id: '1', name: 'Europe Vacation', targetAmount: 50000, currentAmount: 12500, deadline: '2025-06-15' },
-    { id: '2', name: 'New Laptop', targetAmount: 1000, currentAmount: 1000, deadline: '2025-12-01' },
-    { id: '3', name: 'Emergency Savings', targetAmount: 5000, currentAmount: 2000, deadline: '2025-09-30' },
-  ];
+import { apiService } from '../../shared/services/api';
+
+=export type Goal = {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string; // YYYY-MM-DD
+  status: 'in_progress' | 'completed' | 'overdue';
+  daysOverdue?: number;
 };
 
-const addGoal = async (newGoal: Omit<Goal, 'id' | 'currentAmount' | 'status' | 'daysOverdue'>): Promise<Omit<Goal, 'status' | 'daysOverdue'>> => {
-  return { ...newGoal, id: Math.random().toString(), currentAmount: 0 };
-};
-
-const updateGoal = async (updatedGoal: Omit<Goal, 'status' | 'daysOverdue'>): Promise<void> => {
-  console.log('Updated goal:', updatedGoal);
-};
-
-const deleteGoal = async (goalId: string): Promise<void> => {
-  console.log('Deleted goal:', goalId);
-};
-
-const addContribution = async (goalId: string, amount: number): Promise<number> => {
-  console.log('Added contribution to goal', goalId, ':', amount);
-  return amount;
-};
-
-const computeGoalStatus = (goal: Omit<Goal, 'status' | 'daysOverdue'>, currentDate: Date): { status: Goal['status'], daysOverdue?: number } => {
-  if (goal.currentAmount >= goal.targetAmount) {
-    return { status: 'completed' };
-  }
+function computeGoalStatus(
+  goal: Omit<Goal, 'status' | 'daysOverdue'>,
+  currentDate: Date
+): { status: Goal['status']; daysOverdue?: number } {
+  if (goal.currentAmount >= goal.targetAmount) return { status: 'completed' };
   const deadlineDate = new Date(goal.deadline);
   if (deadlineDate < currentDate) {
     const days = Math.floor((currentDate.getTime() - deadlineDate.getTime()) / (1000 * 60 * 60 * 24));
     return { status: 'overdue', daysOverdue: days };
   }
   return { status: 'in_progress' };
-};
+}
+
+function mapDocToUI(doc: any): Omit<Goal, 'status' | 'daysOverdue'> {
+  const iso = doc.fechaMeta || '';
+  const yyyyMMdd = iso.length >= 10 ? iso.slice(0, 10) : iso; 
+  return {
+    id: doc._id,
+    name: doc.nombreMeta,
+    targetAmount: Number(doc.montoObjetivo || 0),
+    currentAmount: Number(doc.montoActual || 0),
+    deadline: yyyyMMdd,
+  };
+}
+
+type CreatePayload = Omit<Goal, 'id' | 'status' | 'daysOverdue' | 'currentAmount'> & { currentAmount?: number };
+type UpdatePayload = Omit<Goal, 'status' | 'daysOverdue'>;
+function isUpdatePayload(p: CreatePayload | UpdatePayload): p is UpdatePayload {
+  return (p as any).id != null;
+}
 
 const SavingsGoalsScreen: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -52,81 +57,118 @@ const SavingsGoalsScreen: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editMode, setEditMode] = useState(false);
 
-  useEffect(() => {
-    loadGoals();
+  const loadFromCloud = useCallback(async () => {
+    try {
+      const userServerId = await AsyncStorage.getItem('user_id');
+      if (!userServerId) return;
+
+      const docs = await apiService.listGoalsFromCloud(userServerId); // array del back
+      const now = new Date();
+      const list = docs.map((d) => {
+        const base = mapDocToUI(d);
+        return { ...base, ...computeGoalStatus(base, now) };
+      });
+      setGoals(list);
+    } catch (e: any) {
+      console.log('loadFromCloud error:', e?.message || e);
+      Alert.alert('Error', 'No fue posible cargar tus metas.');
+    }
   }, []);
 
-  const loadGoals = async () => {
-    const fetchedGoals = await fetchGoals();
-    const currentDate = new Date();
-    const processedGoals = fetchedGoals.map(goal => ({
-      ...goal,
-      ...computeGoalStatus(goal, currentDate),
-    }));
-    setGoals(processedGoals);
+  useEffect(() => { loadFromCloud(); }, [loadFromCloud]);
+
+  // Crear 
+  const handleAddGoal = async (payload: CreatePayload) => {
+    try {
+      const userServerId = await AsyncStorage.getItem('user_id');
+      if (!userServerId) return;
+
+      const curr = payload.currentAmount ?? 0;
+      await apiService.createGoalInCloud({
+        userId: userServerId,
+        name: payload.name,
+        targetAmount: payload.targetAmount,
+        currentAmount: curr,
+        deadline: payload.deadline,
+        status: 'en_progreso',
+      });
+      setModalVisible(false);
+      await loadFromCloud();
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo crear la meta.');
+      console.log('createGoal error:', e?.message || e);
+    }
   };
 
-  const updateGoalsState = (newGoals: Omit<Goal, 'status' | 'daysOverdue'>[]) => {
-    const currentDate = new Date();
-    setGoals(newGoals.map(goal => ({
-      ...goal,
-      ...computeGoalStatus(goal, currentDate),
-    })));
+  // Editar 
+  const handleEditGoal = async (updated: UpdatePayload) => {
+    try {
+      await apiService.updateGoalInCloud(updated.id, {
+        name: updated.name,
+        targetAmount: updated.targetAmount,
+        currentAmount: updated.currentAmount,
+        deadline: updated.deadline,
+      });
+      setModalVisible(false);
+      setEditMode(false);
+      await loadFromCloud();
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo actualizar la meta.');
+      console.log('updateGoal error:', e?.message || e);
+    }
   };
 
-  const handleAddGoal = async (newGoal: Omit<Goal, 'id' | 'currentAmount' | 'status' | 'daysOverdue'>) => {
-    const addedGoal = await addGoal(newGoal);
-    const currentGoals = await fetchGoals();
-    updateGoalsState([...currentGoals, addedGoal]);
-    setModalVisible(false);
-  };
-
-  const handleEditGoal = async (updatedGoal: Omit<Goal, 'status' | 'daysOverdue'>) => {
-    await updateGoal(updatedGoal);
-    const newGoals = goals.map(g => g.id === updatedGoal.id ? updatedGoal : g);
-    updateGoalsState(newGoals);
-    setModalVisible(false);
-    setEditMode(false);
-  };
-
+  // Eliminar 
   const handleDeleteGoal = async (goalId: string) => {
-    await deleteGoal(goalId);
-    const newGoals = goals.filter(g => g.id !== goalId);
-    updateGoalsState(newGoals);
+    try {
+      await apiService.deleteGoalInCloud(goalId);
+      await loadFromCloud();
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo eliminar la meta.');
+      console.log('deleteGoal error:', e?.message || e);
+    }
   };
 
+  // Aportación 
   const handleAddContribution = async (amount: number) => {
     if (!selectedGoal) return;
-    const added = await addContribution(selectedGoal.id, amount);
-    const updatedGoal = { ...selectedGoal, currentAmount: selectedGoal.currentAmount + added };
-    const newGoals = goals.map(g => g.id === selectedGoal.id ? updatedGoal : g);
-    updateGoalsState(newGoals);
-    setContribModalVisible(false);
+    try {
+      const newAmount = selectedGoal.currentAmount + amount;
+      await apiService.updateGoalInCloud(selectedGoal.id, { currentAmount: newAmount });
+      setContribModalVisible(false);
+      await loadFromCloud();
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo registrar la aportación.');
+      console.log('addContribution error:', e?.message || e);
+    }
   };
 
-  const openAddContribution = (goal: Goal) => {
-    setSelectedGoal(goal);
-    setContribModalVisible(true);
+  const handleSaveFromModal = (payload: CreatePayload | UpdatePayload): void => {
+    if (isUpdatePayload(payload)) {
+      void handleEditGoal(payload);
+    } else {
+      void handleAddGoal(payload);
+    }
   };
 
-  const openEditGoal = (goal: Goal) => {
-    setSelectedGoal(goal);
-    setEditMode(true);
-    setModalVisible(true);
-  };
+  const openAddContribution = (goal: Goal) => { setSelectedGoal(goal); setContribModalVisible(true); };
+  const openEditGoal = (goal: Goal) => { setSelectedGoal(goal); setEditMode(true); setModalVisible(true); };
 
   const sections = [
-    { title: 'Overdue', data: goals.filter(g => g.status === 'overdue') },
+    { title: 'Overdue',    data: goals.filter(g => g.status === 'overdue') },
     { title: 'In Progress', data: goals.filter(g => g.status === 'in_progress') },
-    { title: 'Completed', data: goals.filter(g => g.status === 'completed') },
+    { title: 'Completed',   data: goals.filter(g => g.status === 'completed') },
   ];
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Savings Goals</Text>
       <Text style={styles.subtitle}>Define and achieve your financial objectives</Text>
-      
-      <TouchableOpacity style={styles.newGoalButton} onPress={() => { setEditMode(false); setSelectedGoal(null); setModalVisible(true); }}>
+
+      <TouchableOpacity
+        style={styles.newGoalButton}
+        onPress={() => { setEditMode(false); setSelectedGoal(null); setModalVisible(true); }}
+      >
         <Text style={styles.newGoalText}>New Goal</Text>
         <Ionicons name="add" size={20} color="#fff" style={styles.icon} />
       </TouchableOpacity>
@@ -155,7 +197,7 @@ const SavingsGoalsScreen: React.FC = () => {
       <AddGoalModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onSave={editMode ? handleEditGoal : handleAddGoal}
+        onSave={handleSaveFromModal}
         initialData={editMode ? selectedGoal : undefined}
       />
 
@@ -169,56 +211,18 @@ const SavingsGoalsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f8f8f8',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3533cd', // Cambiado de #3533cd a negro
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#373643',
-    marginBottom: 20,
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#f8f8f8' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#3533cd', marginBottom: 5 },
+  subtitle: { fontSize: 16, color: '#373643', marginBottom: 20 },
   newGoalButton: {
-    flexDirection: 'row',
-    backgroundColor: '#22c55e', // Cambiado a verde como en CategoriesScreen
-    padding: 10,
-    borderRadius: 20, // Ajustado para mayor redondeo como en CategoriesScreen
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
+    flexDirection: 'row', backgroundColor: '#22c55e', padding: 10, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  newGoalText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginRight: 10,
-  },
-  icon: {
-    marginLeft: 5,
-  },
-  sectionHeaderContainer: {
-    paddingVertical: 8,
-    paddingHorizontal: 5,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 6,
-    marginTop: 10,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#3533cd', // Cambiado de #3533cd a negro
-  },
-  emptySection: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-  },
+  newGoalText: { color: '#fff', fontWeight: 'bold', marginRight: 10 },
+  icon: { marginLeft: 5 },
+  sectionHeaderContainer: { paddingVertical: 8, paddingHorizontal: 5, backgroundColor: '#f0f0f0', borderRadius: 6, marginTop: 10 },
+  sectionHeader: { fontSize: 18, fontWeight: '700', color: '#3533cd' },
+  emptySection: { fontSize: 14, color: '#999', marginTop: 4 },
 });
 
 export default SavingsGoalsScreen;
