@@ -1,0 +1,1 @@
+// Aqui tendremos los estilos compartidos de la aplicacion de tailwind / colores, etc.
