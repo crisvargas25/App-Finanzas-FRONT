@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native';
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || process.env.API_BASE_URL ||
-  (Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : 'http://localhost:4000/api');
+  (Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : 'http://192.168.1.86:4000/api');
 
 // In production builds the base URL should not be logged to avoid leaking
 // configuration details.  Use the DEBUG flag to enable logging when

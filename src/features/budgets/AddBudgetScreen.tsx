@@ -1,11 +1,45 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
+import { Text } from '../../shared/ui/text';
+import BudgetForm, { BudgetFormData } from './components/BudgetForm';
+import { useBudgets } from './hooks/useBudgets';
+import { useNavigation } from '@react-navigation/native';
 
-export default function SettingsScreen() {
+export default function AddBudgetScreen() {
+  const navigation = useNavigation();
+  const { createBudget, loading } = useBudgets();
+  const [isFormVisible, setIsFormVisible] = useState(true);
+
+  const handleCreateBudget = async (data: BudgetFormData) => {
+    try {
+      await createBudget(data);
+      Alert.alert(
+        'Éxito', 
+        'Presupuesto creado correctamente',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo crear el presupuesto');
+    }
+  };
+
+  const handleCloseForm = () => {
+    navigation.goBack();
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Configuración</Text>
-      <Text style={styles.subtitle}>Ajustes de la aplicación</Text>
+      <BudgetForm
+        visible={isFormVisible}
+        onClose={handleCloseForm}
+        onSubmit={handleCreateBudget}
+        loading={loading}
+      />
     </View>
   );
 }
@@ -13,17 +47,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
+    backgroundColor: '#f8f9fa',
   },
 });

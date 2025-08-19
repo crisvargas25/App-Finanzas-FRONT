@@ -94,7 +94,7 @@ export default function DrawerNavigator() {
           ),
         }}
       />
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -104,7 +104,7 @@ export default function DrawerNavigator() {
             <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Drawer.Screen
         name="About"
         component={AboutScreen}
