@@ -19,15 +19,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
   const [currency, setCurrency] = useState(user.currency || currencies[0]);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
-  const handleSave = () => {
-    const updatedUser: User = {
-      ...user,
-      name,
-      email,
-      currency,
-    };
-    onSave(updatedUser);
+ const handleSave = () => {
+  const updatedUser: User = {
+    ...user,
+    name,
+    email,
+    currency,
   };
+  onSave(updatedUser);
+};
+
 
   const renderCurrencyItem = ({ item }: { item: string }) => (
     <TouchableOpacity

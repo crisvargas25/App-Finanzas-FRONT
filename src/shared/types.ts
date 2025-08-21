@@ -69,8 +69,8 @@ export interface Budget {
 }
 
 export interface Transaction {
-  _id?: string; // ID en MongoDB
-  id?: string;  // fallback opcional en frontend
+  _id?: string; 
+  id?: string; 
   userId: string;
   type: "ingreso" | "gasto"; 
   monto: number;

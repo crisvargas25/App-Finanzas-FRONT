@@ -453,7 +453,7 @@ async updateGoalInCloud(serverId: string, patch: {
 async createTransaction(data: any) {
   return this.request("/transactions/create", {
     method: "POST",
-    body: JSON.stringify(data),   // 👈 importante
+    body: JSON.stringify(data),  
     headers: { "Content-Type": "application/json" },
   });
 }
@@ -477,9 +477,46 @@ async createTransaction(data: any) {
       { method: "DELETE" }
     );
   }
+  // ========= PERFIL DE USUARIO =========
+  async getUserProfile(): Promise<User> {
+  const userId = await AsyncStorage.getItem("user_id");
+  if (!userId) throw new Error("No se encontró userId en AsyncStorage");
 
+  const response = await this.request<{ message: string; user: User }>(
+    `/users/get/${userId}`,
+    { method: "GET" }
+  );
+
+  console.log(" getUserProfile response:", response);
+
+  return response.user;  
+}
+
+
+async updateUserProfile(data: { name?: string; email?: string; currency?: string }) {
+  const userId = await AsyncStorage.getItem("user_id");
+  if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+  return this.request<{ message: string; user: User }>(
+    `/users/update/${userId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+
+async deleteUserAccount() {
+  const userId = await AsyncStorage.getItem("user_id");
+  return this.request(`/users/delete/${userId}`, { method: "DELETE" });
+}
 
 }
+
+
+
+
 
 
 

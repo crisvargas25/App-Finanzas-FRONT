@@ -1,15 +1,35 @@
 // screens/DeleteAccountModal.tsx
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../shared/services/api'; // 👈 importa tu servicio
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface DeleteAccountModalProps {
   visible: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void; // sigue recibiendo onConfirm del padre
 }
 
 const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ visible, onClose, onConfirm }) => {
+  const handleDelete = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("user_id");
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      // 👇 Llamada real al backend
+      const response = await api.deleteUserAccount(userId);
+      console.log("✅ Cuenta eliminada:", response);
+
+      Alert.alert("Success", "Your account has been deleted.");
+      onConfirm(); // notifica al padre (ProfileScreen) que se eliminó
+      onClose();   // cierra el modal
+    } catch (error) {
+      console.error("❌ Error al eliminar cuenta:", error);
+      Alert.alert("Error", "Could not delete your account.");
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.modalContainer}>
@@ -26,7 +46,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ visible, onClos
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteButton} onPress={onConfirm}>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>

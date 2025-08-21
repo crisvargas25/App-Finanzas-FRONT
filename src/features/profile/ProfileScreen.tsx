@@ -2,39 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { User } from '../../shared/types'; 
+import { User } from '../../shared/types';
 import EditProfileModal from './EditProfileModal';
 import DeleteAccountModal from './DeleteAccountModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import { apiService } from '../../shared/services/api'; 
 
 const defaultAvatar = require('../../../assets/imgs/profile.jpeg');
-
-const fetchUserProfile = async (): Promise<User> => {
-  return {
-    _id: '1',
-    name: 'Juan Pérez',
-    email: 'juan.perez@example.com',
-    creationDate: new Date('2024-01-15'),
-    deleteDate: undefined,
-    status: true,
-    currency: 'MXN',
-    role: [], // ya no lo mostraremos
-  };
-};
-
-const updateUserProfile = async (updatedUser: User): Promise<User> => {
-  console.log('Updated user:', updatedUser);
-  return updatedUser;
-};
-
-const deleteUserAccount = async (userId: string): Promise<void> => {
-  console.log('Deleted user:', userId);
-};
-
-const changePassword = async (userId: string, newPassword: string): Promise<void> => {
-  console.log('Changed password for user:', userId, 'to:', newPassword);
-  // Simulate API call
-};
 
 const ProfileScreen: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,36 +16,60 @@ const ProfileScreen: React.FC = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
-
+useEffect(() => {
   const loadUserProfile = async () => {
-    const fetchedUser = await fetchUserProfile();
-    setUser(fetchedUser);
-  };
-
-  const handleEditProfile = async (updatedUser: User) => {
-    if (user) {
-      const newUser = await updateUserProfile(updatedUser);
-      setUser(newUser);
-      setEditModalVisible(false);
+    try {
+      const fetchedUser = await apiService.getUserProfile();
+      console.log("Perfil cargado:", fetchedUser);
+      setUser(fetchedUser);
+    } catch (err) {
+      console.error(" Error en getUserProfile:", err);
     }
   };
 
+  loadUserProfile();
+}, []);
+
+
+
+
+  const handleEditProfile = async (updatedUser: User) => {
+  try {
+    const response = await apiService.updateUserProfile({
+      name: updatedUser.name,
+      email: updatedUser.email,
+      currency: updatedUser.currency,
+    });
+
+    console.log(" Usuario actualizado:", response.user);
+
+    setUser(response.user); 
+    setEditModalVisible(false);
+  } catch (error) {
+    console.error(" Error al actualizar perfil:", error);
+  }
+};
+
+
   const handleDeleteAccount = async () => {
-    if (user?._id) {
-      await deleteUserAccount(user._id);
+    try {
+      await apiService.deleteUserAccount();
       setDeleteModalVisible(false);
-      Alert.alert('Success', 'Account deleted successfully');
+      Alert.alert('Success', 'Cuenta eliminada correctamente');
+    } catch (error) {
+      console.error("Error en deleteUserAccount:", error);
+      Alert.alert("Error", "No se pudo eliminar la cuenta.");
     }
   };
 
   const handleChangePassword = async (newPassword: string) => {
-    if (user?._id) {
-      await changePassword(user._id, newPassword);
+    try {
+      await apiService.changePassword(newPassword);
       setChangePasswordVisible(false);
-      Alert.alert('Success', 'Password changed successfully');
+      Alert.alert('Success', 'Contraseña cambiada correctamente');
+    } catch (error) {
+      console.error(" Error en changePassword:", error);
+      Alert.alert("Error", "No se pudo cambiar la contraseña.");
     }
   };
 
@@ -125,6 +123,7 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* === MODALES === */}
       <EditProfileModal
         visible={editModalVisible}
         onClose={() => setEditModalVisible(false)}
@@ -146,100 +145,22 @@ const ProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f8f8f8',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 25,
-    paddingVertical: 20,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    backgroundColor: '#ddd',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 16,
-    color: '#555',
-  },
-  detailsContainer: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    marginBottom: 20,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  detailLabel: {
-    fontSize: 16,
-    color: '#373643',
-  },
-  detailValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  actions: {
-    flexDirection: 'column',
-    gap: 12,
-  },
-  editButton: {
-    flexDirection: 'row',
-    backgroundColor: '#22c55e',
-    padding: 15,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  changePasswordButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3b82f6', // Azul para diferenciar
-    padding: 15,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    backgroundColor: '#ef4444',
-    padding: 15,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionIcon: {
-    marginRight: 10,
-  },
-  actionText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  loading: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#373643',
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#f8f8f8' },
+  header: { alignItems: 'center', marginBottom: 25, paddingVertical: 20 },
+  avatar: { width: 120, height: 120, borderRadius: 60, marginBottom: 10, borderWidth: 2, borderColor: '#ccc', backgroundColor: '#ddd' },
+  name: { fontSize: 24, fontWeight: 'bold', color: '#222', marginBottom: 5 },
+  email: { fontSize: 16, color: '#555' },
+  detailsContainer: { backgroundColor: '#fff', padding: 15, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3, marginBottom: 20 },
+  detailItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  detailLabel: { fontSize: 16, color: '#373643' },
+  detailValue: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  actions: { flexDirection: 'column', gap: 12 },
+  editButton: { flexDirection: 'row', backgroundColor: '#22c55e', padding: 15, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  changePasswordButton: { flexDirection: 'row', backgroundColor: '#3b82f6', padding: 15, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  deleteButton: { flexDirection: 'row', backgroundColor: '#ef4444', padding: 15, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  actionIcon: { marginRight: 10 },
+  actionText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  loading: { textAlign: 'center', marginTop: 20, color: '#373643' },
 });
 
 export default ProfileScreen;
