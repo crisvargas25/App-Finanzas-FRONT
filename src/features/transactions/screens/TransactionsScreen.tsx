@@ -1,3 +1,4 @@
+// src/features/transactions/screens/TransactionsScreen.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, RefreshControl, Alert, ScrollView } from 'react-native';
 import { Text } from '../../../shared/ui/text';
@@ -33,21 +34,22 @@ export default function TransactionsScreen() {
       await createTransaction(data);
       setShowForm(false);
       Alert.alert('Éxito', 'Transaction created successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Error creating transaction');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Error creating transaction');
     }
   };
 
   const handleUpdateTransaction = async (data: any) => {
-    if (!editingTransaction?.id) return;
-    
+    if (!editingTransaction?._id && !editingTransaction?.id) return;
+
     try {
-      await updateTransaction(editingTransaction.id, data);
+      const id = editingTransaction?._id || editingTransaction?.id!;
+      await updateTransaction(id, data);
       setShowForm(false);
       setEditingTransaction(null);
       Alert.alert('Éxito', 'Transaction updated successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Error updating transaction');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Error updating transaction');
     }
   };
 
@@ -56,12 +58,12 @@ export default function TransactionsScreen() {
     setShowForm(true);
   };
 
-  const handleDeleteTransaction = async (id: number) => {
+  const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
       Alert.alert('Éxito', 'Transaction deleted successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Error deleting transaction');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Error deleting transaction');
     }
   };
 
@@ -78,28 +80,28 @@ export default function TransactionsScreen() {
 
   const getTotalBalance = () => {
     return transactions.reduce((total, transaction) => {
-      return transaction.tipo === 'income' 
-        ? total + transaction.monto 
+      return transaction.type === 'income'
+        ? total + transaction.monto
         : total - transaction.monto;
     }, 0);
   };
 
   const getIncomeTotal = () => {
     return transactions
-      .filter(t => t.tipo === 'income')
+      .filter((t) => t.tyoe === 'income')
       .reduce((total, t) => total + t.monto, 0);
   };
 
   const getExpenseTotal = () => {
     return transactions
-      .filter(t => t.tipo === 'outcome')
+      .filter((t) => t.type === 'outcome')
       .reduce((total, t) => total + t.monto, 0);
   };
 
   const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'MXN',
     }).format(amount);
   };
 
@@ -145,29 +147,29 @@ export default function TransactionsScreen() {
         </View>
 
         <View style={styles.summaryContainer}>
-          <Card variant='elevated' color="#ffffff">
+          <Card variant="elevated" color="#ffffff">
             <View style={styles.summaryCard}>
               <Text size="sm" type="grayText">Total Balance</Text>
               <Text
-                size="xl" 
+                size="xl"
                 style={{
-                  color: getTotalBalance() >= 0 ? '#9fdab5ff' : '#d9606cff',
+                  color: getTotalBalance() >= 0 ? '#4caf50' : '#f44336',
                 }}
               >
                 {formatAmount(getTotalBalance())}
               </Text>
             </View>
-            
+
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text size="xs" type="grayText">Incomes</Text>
-                <Text size="sm" type="greenText">
+                <Text size="sm" type="navyBlueText">
                   {formatAmount(getIncomeTotal())}
                 </Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text size="xs" type="grayText">Expenses</Text>
-                <Text size="sm" type="redText">
+                <Text size="sm" type="navyBlueText">
                   {formatAmount(getExpenseTotal())}
                 </Text>
               </View>
@@ -190,8 +192,10 @@ export default function TransactionsScreen() {
           <View style={styles.transactionsList}>
             {transactions.map((transaction) => (
               <TransactionCard
-                key={transaction.id?.toString() || Math.random().toString()}
+                key={transaction._id || transaction.id}
                 transaction={transaction}
+                categories={categories}
+                budgets={budgets}
                 onEdit={handleEditTransaction}
                 onDelete={handleDeleteTransaction}
               />
@@ -215,68 +219,17 @@ export default function TransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  buttonContainer: {
-    bottom: 16,
-  },
-  summaryContainer: {
-  },
-  summaryCard: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  balanceAmount: {
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  transactionsList: {
-    paddingBottom: 20,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    textAlign: 'center',
-    maxWidth: 250,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  errorTitle: {
-    marginTop: 16,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#3533cd',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
+  buttonContainer: { marginBottom: 16 },
+  summaryContainer: { marginBottom: 16 },
+  summaryCard: { alignItems: 'center', marginBottom: 8 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  summaryItem: { alignItems: 'center' },
+  transactionsList: { paddingBottom: 20 },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyTitle: { marginTop: 16, marginBottom: 8 },
+  emptySubtitle: { textAlign: 'center', maxWidth: 250 },
+  errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  errorTitle: { marginTop: 16, marginBottom: 8, textAlign: 'center' },
+  errorMessage: { textAlign: 'center', marginBottom: 20 },
+  retryButton: { backgroundColor: '#3533cd', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
 });

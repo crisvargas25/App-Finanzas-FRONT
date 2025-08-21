@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 interface Category {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: 'ingreso' | 'gasto';
   color: string;
   createdAt: string;
 }
@@ -55,7 +55,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   initialData,
 }) => {
   const [name, setName] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [type, setType] = useState<'ingreso' | 'gasto'>('gasto');
   const [color, setColor] = useState(predefinedColors[0]);
   const [error, setError] = useState<string>('');
 
@@ -66,7 +66,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
       setColor(initialData.color);
     } else {
       setName('');
-      setType('expense');
+      setType('gasto');
       setColor(predefinedColors[0]);
     }
     setError('');
@@ -136,37 +136,37 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           <Text style={styles.label}>Type</Text>
           <View style={styles.typeRow}>
             <TouchableOpacity
-              style={[styles.typeChip, type === 'income' && styles.typeChipActive]}
-              onPress={() => setType('income')}
+              style={[styles.typeChip, type === 'ingreso' && styles.typeChipActive]}
+              onPress={() => setType('ingreso')}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityState={{ selected: type === 'income' }}
+              accessibilityState={{ selected: type === 'ingreso' }}
             >
               <Ionicons
                 name="arrow-down-circle"
                 size={16}
-                color={type === 'income' ? '#fff' : COLORS.primary}
+                color={type === 'ingreso' ? '#fff' : COLORS.primary}
                 style={{ marginRight: 6 }}
               />
-              <Text style={[styles.typeText, type === 'income' && styles.typeTextActive]}>
+              <Text style={[styles.typeText, type === 'ingreso' && styles.typeTextActive]}>
                 Income
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.typeChip, type === 'expense' && styles.typeChipActive]}
-              onPress={() => setType('expense')}
+              style={[styles.typeChip, type === 'gasto' && styles.typeChipActive]}
+              onPress={() => setType('gasto')}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityState={{ selected: type === 'expense' }}
+              accessibilityState={{ selected: type === 'gasto' }}
             >
               <Ionicons
                 name="arrow-up-circle"
                 size={16}
-                color={type === 'expense' ? '#fff' : COLORS.primary}
+                color={type === 'gasto' ? '#fff' : COLORS.primary}
                 style={{ marginRight: 6 }}
               />
-              <Text style={[styles.typeText, type === 'expense' && styles.typeTextActive]}>
+              <Text style={[styles.typeText, type === 'gasto' && styles.typeTextActive]}>
                 Expense
               </Text>
             </TouchableOpacity>

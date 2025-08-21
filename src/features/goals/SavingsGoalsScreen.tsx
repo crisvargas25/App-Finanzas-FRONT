@@ -9,7 +9,7 @@ import AddContributionModal from './AddContributionModal';
 
 import { apiService } from '../../shared/services/api';
 
-=export type Goal = {
+export type Goal = {
   id: string;
   name: string;
   targetAmount: number;

@@ -1,191 +1,63 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { apiService } from '../../../shared/services/api';
 import { Budget } from '../../../shared/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface BudgetFormData {
-  nombre: string;
-  monto_total: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  estado: 'active' | 'closed' | 'canceled';
-}
-
-// Datos mock temporales hasta que el backend esté listo
-const initialBudgets: Budget[] = [
-  {
-    id: 1,
-    nombre: 'Presupuesto Enero 2025',
-    monto_total: 3000,
-    fecha_inicio: '2025-01-01',
-    fecha_fin: '2025-01-31',
-    estado: 'active',
-  },
-  {
-    id: 2,
-    nombre: 'Vacaciones Verano',
-    monto_total: 5000,
-    fecha_inicio: '2025-06-01',
-    fecha_fin: '2025-07-31',
-    estado: 'active',
-  },
-  {
-    id: 3,
-    nombre: 'Emergencias Diciembre',
-    monto_total: 1000,
-    fecha_inicio: '2024-12-01',
-    fecha_fin: '2024-12-31',
-    estado: 'closed',
-  },
-];
-
-export const useBudgets = () => {
-  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
+export function useBudgets() {
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simular carga inicial
   const loadBudgets = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // En el futuro, aquí se hará la llamada real a la API
-      // const response = await apiService.get('/budgets');
-      // setBudgets(response.data);
-    } catch (err) {
-      setError('Error al cargar los presupuestos');
-      console.error('Error loading budgets:', err);
+      const userId = await AsyncStorage.getItem('user_id'); 
+      if (!userId) throw new Error("No se encontró user_id en AsyncStorage");
+      const data = await apiService.getBudgets(userId) as Budget[];
+      setBudgets(data);
+    } catch (err: any) {
+      setError(err.message);
+      console.error("Error loading budgets:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Cargar datos al inicio
-  useEffect(() => {
-    loadBudgets();
-  }, []);
-
-  const createBudget = async (budgetData: BudgetFormData) => {
-    setLoading(true);
-    setError(null);
-    
+  const addBudget = async (budget: Omit<Budget, "_id">) => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Crear nuevo presupuesto con ID único
-      const newId = Math.max(...budgets.map(b => b.id)) + 1;
-      
-      const newBudget: Budget = {
-        id: newId,
-        ...budgetData,
-      };
-      
-      setBudgets(prevBudgets => [...prevBudgets, newBudget]);
-      
-      // En el futuro, aquí se hará la llamada real a la API
-      // const response = await apiService.post('/budgets', budgetData);
-      // setBudgets(prevBudgets => [...prevBudgets, response.data]);
-      
-      return newBudget;
+      const userId = await AsyncStorage.getItem('user_id'); 
+      if (!userId) throw new Error("No se encontró user_id en AsyncStorage");
+      const data = { ...budget, userId };
+      await apiService.createBudget(data);
+      await loadBudgets();
     } catch (err) {
-      setError('Error al crear el presupuesto');
-      console.error('Error creating budget:', err);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.error("Error creating budget:", err);
     }
   };
 
-  const updateBudget = async (id: number, budgetData: BudgetFormData) => {
-    setLoading(true);
-    setError(null);
-    
+  const updateBudget = async (_id: string, patch: Partial<Budget>) => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const updatedBudget: Budget = {
-        id,
-        ...budgetData,
-      };
-      
-      setBudgets(prevBudgets => 
-        prevBudgets.map(budget => 
-          budget.id === id ? updatedBudget : budget
-        )
-      );
-      
-      // En el futuro, aquí se hará la llamada real a la API
-      // const response = await apiService.put(`/budgets/${id}`, budgetData);
-      // setBudgets(prevBudgets => 
-      //   prevBudgets.map(budget => 
-      //     budget.id === id ? response.data : budget
-      //   )
-      // );
-      
-      return updatedBudget;
+      await apiService.updateBudget(_id, patch);
+      await loadBudgets();
     } catch (err) {
-      setError('Error al actualizar el presupuesto');
-      console.error('Error updating budget:', err);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.error("Error updating budget:", err);
     }
   };
 
-  const deleteBudget = async (id: number) => {
-    setLoading(true);
-    setError(null);
-    
+  const deleteBudget = async (_id: string) => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setBudgets(prevBudgets => 
-        prevBudgets.filter(budget => budget.id !== id)
-      );
-      
-      // En el futuro, aquí se hará la llamada real a la API
-      // await apiService.delete(`/budgets/${id}`);
-      
+      await apiService.deleteBudget(_id);
+      await loadBudgets();
     } catch (err) {
-      setError('Error al eliminar el presupuesto');
-      console.error('Error deleting budget:', err);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.error("Error deleting budget:", err);
     }
   };
 
-  const getBudgetById = (id: number): Budget | undefined => {
-    return budgets.find(budget => budget.id === id);
-  };
+  const getBudgetById = (_id: string): Budget | null =>
+    budgets.find(b => b._id === _id) || null;
 
-  const getActiveBudgets = (): Budget[] => {
-    return budgets.filter(budget => budget.estado === 'active');
-  };
+  useEffect(() => { loadBudgets(); }, []);
 
-  const getBudgetsByDateRange = (startDate: string, endDate: string): Budget[] => {
-    return budgets.filter(budget => 
-      budget.fecha_inicio >= startDate && budget.fecha_fin <= endDate
-    );
-  };
-
-  const refreshBudgets = () => {
-    loadBudgets();
-  };
-
-  return {
-    budgets,
-    loading,
-    error,
-    createBudget,
-    updateBudget,
-    deleteBudget,
-    getBudgetById,
-    getActiveBudgets,
-    getBudgetsByDateRange,
-    refreshBudgets,
-  };
-};
+  return { budgets, loading, error, loadBudgets, addBudget, updateBudget, deleteBudget, getBudgetById };
+}

@@ -13,9 +13,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // Debes definir `EXPO_PUBLIC_API_URL` en tu entorno (por ejemplo en app.json
 // dentro de `extra`). Si no se define, utiliza un valor por defecto.
 import { Platform } from 'react-native';
+import { Budget, Transaction, Category } from "../types";
+
+
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || process.env.API_BASE_URL ||
-  (Platform.OS === "android" ? "http://10.0.2.2:4000/api" : "http://192.168.3.149:4000/api");
+  process.env.EXPO_PUBLIC_API_URL ||
+  process.env.API_BASE_URL ||
+  (Platform.OS === 'android'
+    ? 'http://10.0.2.2:4000/api'
+    : 'http://192.168.3.149:4000/api');
+
+export default API_BASE_URL;
+
 
 // In production builds the base URL should not be logged to avoid leaking
 // configuration details.  Use the DEBUG flag to enable logging when
@@ -26,23 +35,43 @@ class ApiService {
    * endpoint de actualización que extiende la validez del token en el servidor.
    */ 
   private async updateTokenIfNeeded(): Promise<void> {
-    const token = await AsyncStorage.getItem('auth_token')
-    const userId = await AsyncStorage.getItem('user_id')
-    if (!token || !userId) return
+    const token = await AsyncStorage.getItem('auth_token');
+    const userId = await AsyncStorage.getItem('user_id');
+    if (!token || !userId) {
+        await this.handleUnauthorized();
+        return;
+    }
 
     try {
-      await fetch(`${API_BASE_URL}/auth/update?userId=${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/auth/update?userId=${userId}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
         },
-      })
+        });
+
+        if (response.status === 401) {
+        await this.handleUnauthorized();
+        throw new Error('Token inválido o expirado');
+        }
+
+        if (!response.ok) {
+        throw new Error('No se pudo actualizar el token');
+        }
+
+        const result = await response.json();
+        console.log('Token update response:', result);
+
+        // Si el servidor devuelve un nuevo token, guárdalo
+        if (result.token) {
+        await AsyncStorage.setItem('auth_token', result.token);
+        }
     } catch (err) {
-      // Registra si no fue posible actualizar el token para propósitos de depuración
-      console.error('No se pudo actualizar el token', err)
+        console.error('No se pudo actualizar el token:', err);
+        await this.handleUnauthorized();
     }
-  }
+    }
 
   /**
    * Maneja un error de autenticación eliminando credenciales almacenadas.
@@ -124,6 +153,8 @@ class ApiService {
 
     
     }
+
+    
     
   // ========= ENDPOINTS DE AUTENTICACIÓN =========
 
@@ -269,7 +300,7 @@ async listGoalsFromCloud(userServerId: string) {
     nombreMeta: string;
     montoObjetivo: number;
     montoActual: number;
-    fechaMeta: string;    // ISO o YYYY-MM-DD
+    fechaMeta: string;    
     estado?: 'en_progreso' | 'cumplida' | 'cancelada';
     updatedAt?: string;
   }>>(`/saving-goals/getall?userId=${encodeURIComponent(userServerId)}`);
@@ -320,18 +351,136 @@ async updateGoalInCloud(serverId: string, patch: {
   );
 }
 
-// Eliminar meta en backend
-async deleteGoalInCloud(serverId: string) {
-  return this.request<{ message: string }>(
-    `/saving-goals/delete/${encodeURIComponent(serverId)}`,
-    { method: 'DELETE' }
-  );
+  // Eliminar meta en backend
+  async deleteGoalInCloud(serverId: string) {
+    return this.request<{ message: string }>(
+      `/saving-goals/delete/${encodeURIComponent(serverId)}`,
+      { method: 'DELETE' }
+    );
+  }
+
+    // ========= BUDGETS =========
+
+      async getBudgets(userId: string) {
+      return this.request<Budget[]>(`/budgets/getall?userId=${userId}`, {
+        method: "GET",
+      });
+    }
+
+    async createBudget(data: Omit<Budget, "id">) {
+      return this.request<Budget>("/budgets/create", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    }
+
+    async updateBudget(id: string, data: Partial<Budget>) {
+      return this.request<Budget>(`/budgets/update/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    }
+
+    async deleteBudget(id: string) {
+      return this.request<{ message: string }>(`/budgets/delete/${id}`, {
+        method: "DELETE",
+      });
+    }
+
+
+    
+      
+
+        /// ========= CATEGORIES =========
+    async getCategories() {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      return this.request(`/finance-categories/getall?userId=${userId}`, {
+        method: "GET",
+      });
+    }
+
+    async createCategory(data: { name: string; type: string; color: string }) {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      const body = {
+        userId,   
+        ...data,
+      };
+
+      return this.request(`/finance-categories/create`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    }
+
+    async updateCategory(id: string, data: { name?: string; type?: string; color?: string }) {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      const body = {
+        userId,  
+        ...data,
+      };
+
+      return this.request(`/finance-categories/update/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    }
+
+    async deleteCategory(id: string) {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      return this.request(`/finance-categories/delete/${id}?userId=${userId}`, {
+        method: "DELETE",
+      });
+    }
+     // ========= TRANSACTIONS =========
+
+  async getTransactions() {
+    const userId = await AsyncStorage.getItem("user_id");
+    if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+    return this.request<Transaction[]>(`/transactions/getall?userId=${userId}`, {
+      method: "GET",
+    });
+  }
+
+async createTransaction(data: any) {
+  return this.request("/transactions/create", {
+    method: "POST",
+    body: JSON.stringify(data),   // 👈 importante
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
+  async updateTransaction(id: string, data: Partial<Transaction>) {
+    const userId = await AsyncStorage.getItem("user_id");
+    if (!userId) throw new Error("No se encontró userId en AsyncStorage");
 
+    return this.request<Transaction>(`/transactions/update/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...data, userId }),
+    });
+  }
+
+  async deleteTransaction(id: string) {
+    const userId = await AsyncStorage.getItem("user_id");
+    if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+    return this.request<{ message: string }>(
+      `/transactions/delete/${id}?userId=${userId}`,
+      { method: "DELETE" }
+    );
   }
 
 
+}
 
-// Instancia única del servicio API
+
+
 export const apiService = new ApiService()

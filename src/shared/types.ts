@@ -46,34 +46,41 @@ export interface Goal {
   daysOverdue?: number;
 }
 
-// ===== Transaction =====
-export type TransactionType = 'income' | 'outcome';
 
 export interface Category {
-  id: number;
-  name: string;
+  _id: string;
+  userId: string;
+  nombre: string;
+  tipo: "ingreso" | "gasto";
+  color: string;
 }
+
 
 export interface Budget {
-  id: number;
-  usuario_id?: number;
-  nombre: string;
-  monto_total: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  estado: 'active' | 'closed' | 'canceled';
+  _id: string;
+  userId: string;
+  name: string;
+  montoTotal: number;
+  periodo: 'mensual' | 'semanal' | 'personalizado';
+  fechaInicio: string;
+  fechaFin: string;
+  estado: 'activo' | 'cerrado' | 'cancelado';
 }
 
+export type TransactionType = "ingreso" | "gasto";
+
 export interface Transaction {
-  id?: number;
-  usuario_id?: number;
-  tipo: TransactionType;
+  id: string;
+  _id?: string;
+  usuario_id: string;
+  type: TransactionType;
   monto: number;
-  fecha?: string;
-  categoria_id: number;
-  presupuesto_id?: number;
+  fecha: string;
+  categoria_id: number | string;
+  presupuesto_id?: number | string;
   nota?: string;
-  // Para mostrar datos relacionados
+
+  // Relaciones opcionales
   categoria?: Category;
   presupuesto?: Budget;
 }

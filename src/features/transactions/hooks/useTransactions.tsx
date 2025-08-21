@@ -1,193 +1,104 @@
-import { useState, useEffect } from 'react';
-import { Transaction, Category, Budget } from '../../../shared/types';
-
-// Datos mock temporales hasta que el backend esté listo
-const mockCategories: Category[] = [
-  { id: 1, name: 'Comida' },
-  { id: 2, name: 'Transporte' },
-  { id: 3, name: 'Alojamiento' },
-  { id: 4, name: 'Entretenimiento' },
-  { id: 5, name: 'Salario' },
-  { id: 6, name: 'Otros' },
-];
-
-const mockBudgets: Budget[] = [
-  { id: 1, name: 'Presupuesto Mensual' },
-  { id: 2, name: 'Vacaciones' },
-  { id: 3, name: 'Emergencias' },
-];
-
-// Transacciones de ejemplo hardcodeadas
-const initialTransactions: Transaction[] = [
-  {
-    id: 1,
-    tipo: 'income',
-    monto: 2500,
-    categoria_id: 5,
-    fecha: '2025-08-18T10:30:00Z',
-    nota: 'Salario mensual',
-    categoria: { id: 5, name: 'Salario' },
-    presupuesto: { id: 1, name: 'Presupuesto Mensual' },
-    presupuesto_id: 1,
-  },
-  {
-    id: 2,
-    tipo: 'outcome',
-    monto: 45.50,
-    categoria_id: 1,
-    fecha: '2025-08-18T14:15:00Z',
-    nota: 'Almuerzo en restaurante',
-    categoria: { id: 1, name: 'Comida' },
-  },
-  {
-    id: 3,
-    tipo: 'outcome',
-    monto: 15.20,
-    categoria_id: 2,
-    fecha: '2025-08-17T08:45:00Z',
-    nota: 'Metro al trabajo',
-    categoria: { id: 2, name: 'Transporte' },
-    presupuesto: { id: 1, name: 'Presupuesto Mensual' },
-    presupuesto_id: 1,
-  },
-];
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
+import { apiService } from "../../../shared/services/api"; // 👈 CORREGIDO
+import { Transaction, Category, Budget } from "../../../shared/types";
 
 export const useTransactions = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [budgets, setBudgets] = useState<Budget[]>(mockBudgets);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simular carga inicial
-  const loadInitialData = async () => {
-    setLoading(true);
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setLoading(false);
-    setError(null);
+  // === cargar transacciones ===
+  const fetchTransactions = async () => {
+    try {
+      const data = await apiService.getTransactions();
+      setTransactions(data || []);
+    } catch (err: any) {
+      console.error("Error fetching transactions:", err);
+      setError("Error fetching transactions");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Cargar datos al inicio
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const createTransaction = async (transactionData: {
-    tipo: 'income' | 'outcome';
-    monto: number;
-    categoria_id: number;
-    presupuesto_id?: number;
-    nota?: string;
-  }) => {
-    setLoading(true);
-    
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+  // === cargar categorías ===
+  const fetchCategories = async () => {
     try {
-      // Crear nueva transacción con ID único
-      const newId = Math.max(...transactions.map(t => t.id || 0)) + 1;
-      
-      const categoria = categories.find(c => c.id === transactionData.categoria_id);
-      const presupuesto = transactionData.presupuesto_id 
-        ? budgets.find(b => b.id === transactionData.presupuesto_id)
-        : undefined;
-      
-      const newTransaction: Transaction = {
-        id: newId,
-        ...transactionData,
-        fecha: new Date().toISOString(),
-        categoria,
-        presupuesto,
-      };
-      
-      // Agregar al inicio de la lista
-      setTransactions(prev => [newTransaction, ...prev]);
-      setError(null);
-      
-      console.log('✅ Transacción creada:', newTransaction);
-      return newTransaction;
+      const data = await apiService.getCategories();
+      setCategories(data || []);
     } catch (err) {
-      setError('Error al crear transacción');
+      console.error("Error fetching categories:", err);
+    }
+  };
+
+  // === cargar presupuestos ===
+  const fetchBudgets = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("user_id");
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+
+      const data = await apiService.getBudgets(userId);
+      setBudgets(data || []);
+    } catch (err) {
+      console.error("Error fetching budgets:", err);
+    }
+  };
+
+  // === crear transacción ===
+  const createTransaction = async (transaction: Omit<Transaction, "id" | "fecha">) => {
+    setLoading(true);
+    try {
+      const newTransaction = await apiService.createTransaction(transaction);
+      setTransactions((prev) => [...prev, newTransaction]);
+    } catch (err) {
+      console.error("Error creating transaction:", err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTransaction = async (id: number, transactionData: {
-    tipo?: 'income' | 'outcome';
-    monto?: number;
-    categoria_id?: number;
-    presupuesto_id?: number;
-    nota?: string;
-  }) => {
+  // === actualizar transacción ===
+  const updateTransaction = async (id: string, transaction: Partial<Transaction>) => {
     setLoading(true);
-    
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
     try {
-      setTransactions(prev => 
-        prev.map(t => {
-          if (t.id === id) {
-            const categoria = transactionData.categoria_id 
-              ? categories.find(c => c.id === transactionData.categoria_id) || t.categoria
-              : t.categoria;
-              
-            const presupuesto = transactionData.presupuesto_id !== undefined
-              ? budgets.find(b => b.id === transactionData.presupuesto_id)
-              : t.presupuesto;
-            
-            const updatedTransaction = {
-              ...t,
-              ...transactionData,
-              categoria,
-              presupuesto,
-            };
-            
-            console.log('✅ Transacción actualizada:', updatedTransaction);
-            return updatedTransaction;
-          }
-          return t;
-        })
+      const updated = await apiService.updateTransaction(id, transaction);
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === id ? updated : t))
       );
-      
-      setError(null);
     } catch (err) {
-      setError('Error al actualizar transacción');
+      console.error("Error updating transaction:", err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteTransaction = async (id: number) => {
-    setLoading(true);
-    
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
+  // === eliminar transacción ===
+  const deleteTransaction = async (id: string) => {
     try {
-      setTransactions(prev => {
-        const filtered = prev.filter(t => t.id !== id);
-        console.log('✅ Transacción eliminada, ID:', id);
-        return filtered;
-      });
-      setError(null);
+      await apiService.deleteTransaction(id);
+setTransactions((prev) => prev.filter((t) => (t._id || t.id) !== id));
     } catch (err) {
-      setError('Error al eliminar transacción');
+      console.error("Error deleting transaction:", err);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
+  // === refrescar todo ===
   const refreshTransactions = async () => {
-    console.log('🔄 Refrescando transacciones...');
-    await loadInitialData();
+    setLoading(true);
+    await fetchTransactions();
+    await fetchCategories();
+    await fetchBudgets();
+    setLoading(false);
   };
+
+  useEffect(() => {
+    refreshTransactions();
+  }, []);
 
   return {
     transactions,

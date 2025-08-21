@@ -6,21 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useBudgets } from '../hooks/useBudgets';
 
-interface BudgetDetailScreenProps {
-  route: {
-    params: {
-      budgetId: number;
-    };
-  };
-}
-
 export default function BudgetDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { budgetId } = route.params as { budgetId: number };
+  const { budgetId } = route.params as { budgetId: string }; // ahora _id es string
   const { getBudgetById, deleteBudget } = useBudgets();
-  
-  const budget = getBudgetById(budgetId);
+
+  const budget: Budget | null = getBudgetById(budgetId);
 
   if (!budget) {
     return (
@@ -36,29 +28,12 @@ export default function BudgetDetailScreen() {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '#4CAF50';
-      case 'closed':
-        return '#9E9E9E';
-      case 'canceled':
-        return '#F44336';
-      default:
-        return '#9E9E9E';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Activo';
-      case 'closed':
-        return 'Cerrado';
-      case 'canceled':
-        return 'Cancelado';
-      default:
-        return status;
+  const getStatusColor = (estado: string) => {
+    switch (estado) {
+      case 'activo': return '#4CAF50';
+      case 'cerrado': return '#9E9E9E';
+      case 'cancelado': return '#F44336';
+      default: return '#9E9E9E';
     }
   };
 
@@ -81,41 +56,34 @@ export default function BudgetDetailScreen() {
 
   const getDaysRemaining = () => {
     const today = new Date();
-    const endDate = new Date(budget.fecha_fin);
+    const endDate = new Date(budget.fechaFin);
     const diffTime = endDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const getBudgetDuration = () => {
-    const startDate = new Date(budget.fecha_inicio);
-    const endDate = new Date(budget.fecha_fin);
+    const startDate = new Date(budget.fechaInicio);
+    const endDate = new Date(budget.fechaFin);
     const diffTime = endDate.getTime() - startDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const handleEdit = () => {
-    // Navegar a la pantalla de edición
-    // navigation.navigate('EditBudget', { budget });
     Alert.alert('Información', 'Funcionalidad de edición en desarrollo');
   };
 
   const handleDelete = () => {
     Alert.alert(
       'Eliminar Presupuesto',
-      `¿Estás seguro de que quieres eliminar "${budget.nombre}"?`,
+      `¿Estás seguro de que quieres eliminar "${budget.name}"?`,
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteBudget(budget.id);
+              await deleteBudget(budget._id);
               Alert.alert('Éxito', 'Presupuesto eliminado correctamente');
               navigation.goBack();
             } catch (error) {
@@ -136,15 +104,15 @@ export default function BudgetDetailScreen() {
         <View style={styles.header}>
           <View style={styles.titleContainer}>
             <Text size="xl" type="blackText" style={styles.title}>
-              {budget.nombre}
+              {budget.name}
             </Text>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(budget.estado) }]}>
               <Text size="sm" type="whiteText">
-                {getStatusText(budget.estado)}
+                {budget.estado}
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.actionsContainer}>
             <TouchableOpacity onPress={handleEdit} style={styles.actionButton}>
               <Ionicons name="pencil" size={20} color="#3533cd" />
@@ -160,7 +128,7 @@ export default function BudgetDetailScreen() {
             Monto Total
           </Text>
           <Text size="2xl" type="cbBlueText" style={styles.amount}>
-            {formatCurrency(budget.monto_total)}
+            {formatCurrency(budget.montoTotal)}
           </Text>
         </View>
 
@@ -171,7 +139,7 @@ export default function BudgetDetailScreen() {
             </View>
             <Text size="xs" type="grayText">Fecha de Inicio</Text>
             <Text size="md" type="blackText" style={styles.infoValue}>
-              {formatDate(budget.fecha_inicio)}
+              {formatDate(budget.fechaInicio)}
             </Text>
           </View>
 
@@ -181,7 +149,7 @@ export default function BudgetDetailScreen() {
             </View>
             <Text size="xs" type="grayText">Fecha de Fin</Text>
             <Text size="md" type="blackText" style={styles.infoValue}>
-              {formatDate(budget.fecha_fin)}
+              {formatDate(budget.fechaFin)}
             </Text>
           </View>
 
@@ -206,7 +174,7 @@ export default function BudgetDetailScreen() {
           </View>
         </View>
 
-        {budget.estado === 'active' && (
+        {budget.estado === 'activo' && (
           <View style={styles.progressCard}>
             <Text size="md" type="blackText" style={styles.progressTitle}>
               Progreso del Presupuesto
@@ -230,38 +198,23 @@ export default function BudgetDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
+  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  content: { flex: 1, padding: 16 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 24,
   },
-  titleContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
+  titleContainer: { flex: 1, marginRight: 16 },
+  title: { fontWeight: 'bold', marginBottom: 8 },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     alignSelf: 'flex-start',
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  actionsContainer: { flexDirection: 'row', gap: 8 },
   actionButton: {
     padding: 12,
     borderRadius: 12,
@@ -272,9 +225,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  deleteButton: {
-    backgroundColor: '#fff',
-  },
+  deleteButton: { backgroundColor: '#fff' },
   amountCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -287,18 +238,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  amountLabel: {
-    marginBottom: 8,
-  },
-  amount: {
-    fontWeight: 'bold',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
-  },
+  amountLabel: { marginBottom: 8 },
+  amount: { fontWeight: 'bold' },
+  infoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   infoCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -312,14 +254,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  infoIcon: {
-    marginBottom: 8,
-  },
-  infoValue: {
-    marginTop: 4,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  infoIcon: { marginBottom: 8 },
+  infoValue: { marginTop: 4, fontWeight: '600', textAlign: 'center' },
   progressCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -330,40 +266,16 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  progressTitle: {
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+  progressTitle: { fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
   progressBar: {
     height: 8,
     backgroundColor: '#e0e0e0',
     borderRadius: 4,
     marginBottom: 8,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#3533cd',
-    borderRadius: 4,
-  },
-  progressText: {
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  errorTitle: {
-    marginTop: 16,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  backButton: {
-    backgroundColor: '#3533cd',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
+  progressFill: { height: '100%', backgroundColor: '#3533cd', borderRadius: 4 },
+  progressText: { textAlign: 'center' },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
+  errorTitle: { marginTop: 16, marginBottom: 24, textAlign: 'center' },
+  backButton: { backgroundColor: '#3533cd', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
 });

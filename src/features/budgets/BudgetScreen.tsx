@@ -8,15 +8,16 @@ import BudgetForm, { BudgetFormData } from './components/BudgetForm';
 import { Ionicons } from '@expo/vector-icons';
 import MainContainer from '../../components/common/containers/mainContainer';
 
+
 export default function BudgetScreen() {
   const {
     budgets,
     loading,
     error,
-    createBudget,
+    addBudget,
     updateBudget,
     deleteBudget,
-    refreshBudgets,
+    loadBudgets,
   } = useBudgets();
 
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -25,7 +26,7 @@ export default function BudgetScreen() {
 
   const handleCreateBudget = async (data: BudgetFormData) => {
     try {
-      await createBudget(data);
+      await addBudget(data);
       setIsFormVisible(false);
       Alert.alert('Éxito', 'Presupuesto creado correctamente');
     } catch (error) {
@@ -35,9 +36,8 @@ export default function BudgetScreen() {
 
   const handleUpdateBudget = async (data: BudgetFormData) => {
     if (!selectedBudget) return;
-    
     try {
-      await updateBudget(selectedBudget.id, data);
+      await updateBudget(selectedBudget._id, data);
       setIsFormVisible(false);
       setSelectedBudget(null);
       Alert.alert('Éxito', 'Presupuesto actualizado correctamente');
@@ -46,7 +46,7 @@ export default function BudgetScreen() {
     }
   };
 
-  const handleDeleteBudget = async (budgetId: number) => {
+  const handleDeleteBudget = async (budgetId: string) => {
     try {
       await deleteBudget(budgetId);
       Alert.alert('Éxito', 'Presupuesto eliminado correctamente');
@@ -72,7 +72,7 @@ export default function BudgetScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshBudgets();
+    await loadBudgets();
     setRefreshing(false);
   };
 
@@ -109,7 +109,7 @@ export default function BudgetScreen() {
         <Text size="sm" type="grayText" style={styles.errorSubtitle}>
           {error}
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={refreshBudgets}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadBudgets}>
           <Text size="sm" type="whiteText">Reintentar</Text>
         </TouchableOpacity>
       </MainContainer>
@@ -120,7 +120,7 @@ export default function BudgetScreen() {
     <MainContainer>
       <View>
         <Text size="xl" type="blackText">
-          Budgets
+          Presupuestos
         </Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddBudget}>
           <Ionicons name="add" size={24} color="#fff" />
@@ -130,7 +130,7 @@ export default function BudgetScreen() {
       <FlatList
         data={budgets}
         renderItem={renderBudgetCard}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id} 
         contentContainerStyle={[
           styles.listContainer,
           budgets.length === 0 && styles.listContainerEmpty
@@ -168,12 +168,6 @@ const styles = StyleSheet.create({
   listContainerEmpty: {
     flex: 1,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
   emptyTitle: {
     marginTop: 16,
     marginBottom: 8,
@@ -188,12 +182,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
   },
   errorTitle: {
     marginTop: 16,
