@@ -46,14 +46,15 @@ export interface Goal {
   daysOverdue?: number;
 }
 
-
 export interface Category {
   _id: string;
   userId: string;
-  nombre: string;
+  name: string; 
   tipo: "ingreso" | "gasto";
   color: string;
 }
+
+
 
 
 export interface Budget {
@@ -67,20 +68,22 @@ export interface Budget {
   estado: 'activo' | 'cerrado' | 'cancelado';
 }
 
-export type TransactionType = "ingreso" | "gasto";
-
 export interface Transaction {
-  id: string;
-  _id?: string;
-  usuario_id: string;
-  type: TransactionType;
+  _id?: string; // ID en MongoDB
+  id?: string;  // fallback opcional en frontend
+  userId: string;
+  type: "ingreso" | "gasto"; 
   monto: number;
-  fecha: string;
-  categoria_id: number | string;
-  presupuesto_id?: number | string;
+  fecha: string; 
+  categoriaId?: Category | string | null;   
+  presupuestoId?: Budget | string | null;   
   nota?: string;
+}
 
-  // Relaciones opcionales
-  categoria?: Category;
-  presupuesto?: Budget;
+export interface TransactionFormData {
+  type: "income" | "outcome"; 
+  monto: number;
+  categoriaId?: string;
+  presupuestoId?: string;
+  nota?: string;
 }

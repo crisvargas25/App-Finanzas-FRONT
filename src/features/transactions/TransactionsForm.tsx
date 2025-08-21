@@ -1,3 +1,4 @@
+// src/features/transactions/TransactionsForm.tsx
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from '../../shared/ui/text';
@@ -5,24 +6,15 @@ import Input from '../../components/forms/input';
 import { Transaction, Category, Budget } from '../../shared/types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTransactions } from "./hooks/useTransactions";
 
 interface TransactionFormProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: TransactionFormData) => void;
+  onSubmit: (data: Partial<Transaction>) => void;
   categories: Category[];
   budgets: Budget[];
   transaction?: Transaction | null;
   loading?: boolean;
-}
-
-export interface TransactionFormData {
-  type: 'income' | 'outcome';
-  monto: number;
-  categoriaId?: string;
-  presupuestoId?: string;
-  nota?: string;
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -34,13 +26,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   transaction,
   loading = false,
 }) => {
-  const { createTransaction } = useTransactions();
-
-  const [formData, setFormData] = useState<TransactionFormData>({
+  const [formData, setFormData] = useState({
     type: 'outcome',
     monto: 0,
-    categoriaId: undefined,
-    presupuestoId: undefined,
+    categoriaId: undefined as string | undefined,
+    presupuestoId: undefined as string | undefined,
     nota: '',
   });
 
@@ -49,11 +39,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   useEffect(() => {
     if (transaction) {
       setFormData({
-        type: transaction.type, 
+        type: transaction.type === "ingreso" ? "income" : "outcome",
         monto: transaction.monto,
-        categoriaId: transaction.categoria_id ? transaction.categoria_id.toString() : undefined,
-      presupuestoId: transaction.presupuesto_id ? transaction.presupuesto_id.toString() : undefined,
-        nota: transaction.nota || '',
+        categoriaId: typeof transaction.categoriaId === "string" ? transaction.categoriaId : (transaction.categoriaId?._id || undefined),
+        presupuestoId: typeof transaction.presupuestoId === "string" ? transaction.presupuestoId : (transaction.presupuestoId?._id || undefined),
+        nota: transaction.nota || "",
       });
     } else {
       setFormData({
@@ -65,7 +55,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       });
     }
     setErrors({});
-  }, [transaction, categories, visible]);
+  }, [transaction, visible]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -77,51 +67,38 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   };
 
   const handleSubmit = async () => {
-  try {
-    if (!validateForm()) return;
+    try {
+      if (!validateForm()) return;
 
-    const userId = await AsyncStorage.getItem("user_id");
-    if (!userId) throw new Error("No se encontró userId en AsyncStorage");
+      const userId = await AsyncStorage.getItem("user_id");
+      if (!userId) throw new Error("No se encontró userId en AsyncStorage");
 
-    const payload = {
-      userId,
-      type: formData.type === "income" ? "ingreso" : "gasto",
-      monto: Number(formData.monto),
-      fecha: new Date().toISOString(),
-      categoriaId: formData.categoriaId || null, 
-      presupuestoId: formData.presupuestoId || null,
-      nota: formData.nota || "",
-    };
+      const payload: Partial<Transaction> = {
+        userId,
+        type: formData.type === "income" ? "ingreso" : "gasto",
+        monto: Number(formData.monto),
+        fecha: transaction?.fecha || new Date().toISOString(),
+        categoriaId: formData.categoriaId || "Sin categoría",
+        presupuestoId: formData.presupuestoId || "Sin presupuesto",
+        nota: formData.nota || "",
+      };
 
-    await createTransaction(payload);
-    onClose();
-  } catch (err) {
-    console.error("Error creating transaction:", err);
-  }
-};
-
-
-  const handleClose = () => {
-    setFormData({
-      type: 'outcome',
-      monto: 0,
-      categoriaId: undefined,
-      presupuestoId: undefined,
-      nota: '',
-    });
-    setErrors({});
-    onClose();
+      await onSubmit(payload);
+      onClose();
+    } catch (err) {
+      console.error("Error creating/updating transaction:", err);
+    }
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text size="lg" type="blackText">
               {transaction ? 'Edit Transaction' : 'New Transaction'}
             </Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#373643" />
             </TouchableOpacity>
           </View>
@@ -129,9 +106,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           <ScrollView style={styles.form}>
             {/* Tipo */}
             <View style={styles.fieldContainer}>
-              <Text size="sm" type="blackText" style={styles.label}>
-                Type of Transaction
-              </Text>
+              <Text size="sm" type="blackText" style={styles.label}>Type of Transaction</Text>
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[styles.typeButton, formData.type === 'income' && styles.typeButtonActive]}
@@ -154,9 +129,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
             {/* Monto */}
             <View style={styles.fieldContainer}>
-              <Text size="sm" type="blackText" style={styles.label}>
-                Amount
-              </Text>
+              <Text size="sm" type="blackText" style={styles.label}>Amount</Text>
               <Input
                 placeholder="0.00"
                 keyboardType="numeric"
@@ -168,15 +141,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
             {/* Categoría */}
             <View style={styles.fieldContainer}>
-              <Text size="sm" type="blackText" style={styles.label}>
-                Category
-              </Text>
+              <Text size="sm" type="blackText" style={styles.label}>Category</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsContainer}>
+                {/* Botón "No Category" */}
                 <TouchableOpacity
-                  style={[
-                    styles.optionButton,
-                    !formData.categoriaId && styles.optionButtonActive,
-                  ]}
+                  style={[styles.optionButton, !formData.categoriaId && styles.optionButtonActive]}
                   onPress={() => setFormData({ ...formData, categoriaId: undefined })}
                 >
                   <Text size="xs" type={!formData.categoriaId ? 'whiteText' : 'blackText'}>
@@ -184,28 +153,25 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   </Text>
                 </TouchableOpacity>
 
+                {/* Lista de categorías */}
                 {categories.map((category) => (
                   <TouchableOpacity
                     key={category._id}
-                    style={[
-                      styles.optionButton,
-                      formData.categoriaId === category._id && styles.optionButtonActive,
-                    ]}
+                    style={[styles.optionButton, formData.categoriaId === category._id && styles.optionButtonActive]}
                     onPress={() => setFormData({ ...formData, categoriaId: category._id })}
                   >
                     <Text size="xs" type={formData.categoriaId === category._id ? 'whiteText' : 'blackText'}>
-                      {category.name}
+                      {category.name} 
                     </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
 
+
             {/* Presupuesto */}
             <View style={styles.fieldContainer}>
-              <Text size="sm" type="blackText" style={styles.label}>
-                Budget (Optional)
-              </Text>
+              <Text size="sm" type="blackText" style={styles.label}>Budget (Optional)</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsContainer}>
                 <TouchableOpacity
                   style={[styles.optionButton, !formData.presupuestoId && styles.optionButtonActive]}
@@ -218,10 +184,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 {budgets.map((budget) => (
                   <TouchableOpacity
                     key={budget._id}
-                    style={[
-                      styles.optionButton,
-                      formData.presupuestoId === budget._id && styles.optionButtonActive,
-                    ]}
+                    style={[styles.optionButton, formData.presupuestoId === budget._id && styles.optionButtonActive]}
                     onPress={() => setFormData({ ...formData, presupuestoId: budget._id })}
                   >
                     <Text size="xs" type={formData.presupuestoId === budget._id ? 'whiteText' : 'blackText'}>
@@ -234,9 +197,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
             {/* Nota */}
             <View style={styles.fieldContainer}>
-              <Text size="sm" type="blackText" style={styles.label}>
-                Note (Optional)
-              </Text>
+              <Text size="sm" type="blackText" style={styles.label}>Note (Optional)</Text>
               <Input
                 placeholder="Transaction description..."
                 multiline

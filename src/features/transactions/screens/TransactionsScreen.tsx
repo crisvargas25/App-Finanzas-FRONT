@@ -41,7 +41,6 @@ export default function TransactionsScreen() {
 
   const handleUpdateTransaction = async (data: any) => {
     if (!editingTransaction?._id && !editingTransaction?.id) return;
-
     try {
       const id = editingTransaction?._id || editingTransaction?.id!;
       await updateTransaction(id, data);
@@ -79,23 +78,17 @@ export default function TransactionsScreen() {
   };
 
   const getTotalBalance = () => {
-    return transactions.reduce((total, transaction) => {
-      return transaction.type === 'income'
-        ? total + transaction.monto
-        : total - transaction.monto;
+    return transactions.reduce((total, t) => {
+      return t.type === 'ingreso' ? total + t.monto : total - t.monto;
     }, 0);
   };
 
   const getIncomeTotal = () => {
-    return transactions
-      .filter((t) => t.tyoe === 'income')
-      .reduce((total, t) => total + t.monto, 0);
+    return transactions.filter((t) => t.type === 'ingreso').reduce((total, t) => total + t.monto, 0);
   };
 
   const getExpenseTotal = () => {
-    return transactions
-      .filter((t) => t.type === 'outcome')
-      .reduce((total, t) => total + t.monto, 0);
+    return transactions.filter((t) => t.type === 'gasto').reduce((total, t) => total + t.monto, 0);
   };
 
   const formatAmount = (amount: number) => {
@@ -138,7 +131,6 @@ export default function TransactionsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <MainContainer>
-        {/* Header con resumen */}
         <Header title="Transactions" />
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={() => setShowForm(true)}>
@@ -177,7 +169,6 @@ export default function TransactionsScreen() {
           </Card>
         </View>
 
-        {/* Lista de transacciones */}
         {transactions.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={64} color="#BABABA" />
@@ -203,7 +194,6 @@ export default function TransactionsScreen() {
           </View>
         )}
 
-        {/* Modal de formulario */}
         <TransactionForm
           visible={showForm}
           onClose={handleCloseForm}

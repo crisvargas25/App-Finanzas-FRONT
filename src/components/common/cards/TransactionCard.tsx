@@ -1,3 +1,4 @@
+// src/components/common/cards/TransactionCard.tsx
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Card } from '../../../shared/ui/card';
@@ -29,19 +30,19 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => transaction.id && onDelete(transaction.id),
+          onPress: () => onDelete(transaction._id || transaction.id),
         },
       ]
     );
   };
 
   const formatAmount = (amount: number) =>
-    new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+    new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString('es-MX', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -49,37 +50,36 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       minute: '2-digit',
     });
   };
-const categoriaNombre =
-  (categories ?? []).find(
-    c => String(c._id) === String(transaction.categoriaId || transaction.categoria_id)
-  )?.nombre || 'Sin categoría';
+
+  const categoriaNombre =
+  (transaction.categoriaId as Category)?.name ||
+  (transaction.categoriaId as string) || 
+  "Sin categoría";
 
 const presupuestoNombre =
-  (budgets ?? []).find(
-    b => String(b._id) === String(transaction.presupuestoId || transaction.presupuesto_id)
-  )?.name || 'Sin presupuesto';
+  (transaction.presupuestoId as Budget)?.name ||
+  (transaction.presupuestoId as string) || 
+  "Sin presupuesto";
 
 
   return (
     <Card variant="elevated" color="#ffffff">
-      {/* Header con tipo y acciones */}
       <View style={styles.header}>
         <View style={styles.typeIndicator}>
           <Ionicons
-  name={transaction.tipo === 'ingreso' ? 'arrow-up' : 'arrow-down'}
-  size={20}
-  color={transaction.tipo === 'ingreso' ? '#4ecd7f' : '#d7515f'}
-/>
-<Text
-  size="xs"
-  style={{
-    color: transaction.tipo === 'ingreso' ? '#4ecd7f' : '#d7515f',
-    fontWeight: '600',
-  }}
->
-  {transaction.tipo === 'ingreso' ? 'Income' : 'Outcome'}
-</Text>
-
+            name={transaction.type === 'ingreso' ? 'arrow-up' : 'arrow-down'}
+            size={20}
+            color={transaction.type === 'ingreso' ? '#4ecd7f' : '#d7515f'}
+          />
+          <Text
+            size="xs"
+            style={{
+              color: transaction.type === 'ingreso' ? '#4ecd7f' : '#d7515f',
+              fontWeight: '600',
+            }}
+          >
+            {transaction.type === 'ingreso' ? 'Income' : 'Outcome'}
+          </Text>
         </View>
         <View style={styles.actions}>
           <TouchableOpacity onPress={() => onEdit(transaction)} style={styles.actionButton}>
@@ -91,14 +91,12 @@ const presupuestoNombre =
         </View>
       </View>
 
-      {/* Monto */}
       <View style={styles.amountContainer}>
         <Text size="lg" type="blackText" style={styles.amount}>
           {formatAmount(transaction.monto)}
         </Text>
       </View>
 
-      {/* Categoría, Presupuesto y Fecha */}
       <View style={styles.details}>
         <View style={styles.detailItem}>
           <Ionicons name="pricetag" size={14} color="#BABABA" />
@@ -124,7 +122,6 @@ const presupuestoNombre =
         )}
       </View>
 
-      {/* Nota */}
       {transaction.nota && (
         <View style={styles.noteContainer}>
           <Text size="xs" type="grayText" style={styles.note}>

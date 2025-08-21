@@ -1,6 +1,7 @@
+// src/features/transactions/hooks/useTransactions.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { apiService } from "../../../shared/services/api"; // 👈 CORREGIDO
+import { apiService } from "../../../shared/services/api";
 import { Transaction, Category, Budget } from "../../../shared/types";
 
 export const useTransactions = () => {
@@ -10,7 +11,6 @@ export const useTransactions = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // === cargar transacciones ===
   const fetchTransactions = async () => {
     try {
       const data = await apiService.getTransactions();
@@ -23,7 +23,6 @@ export const useTransactions = () => {
     }
   };
 
-  // === cargar categorías ===
   const fetchCategories = async () => {
     try {
       const data = await apiService.getCategories();
@@ -33,7 +32,6 @@ export const useTransactions = () => {
     }
   };
 
-  // === cargar presupuestos ===
   const fetchBudgets = async () => {
     try {
       const userId = await AsyncStorage.getItem("user_id");
@@ -46,8 +44,7 @@ export const useTransactions = () => {
     }
   };
 
-  // === crear transacción ===
-  const createTransaction = async (transaction: Omit<Transaction, "id" | "fecha">) => {
+  const createTransaction = async (transaction: Partial<Transaction>) => {
     setLoading(true);
     try {
       const newTransaction = await apiService.createTransaction(transaction);
@@ -60,13 +57,12 @@ export const useTransactions = () => {
     }
   };
 
-  // === actualizar transacción ===
   const updateTransaction = async (id: string, transaction: Partial<Transaction>) => {
     setLoading(true);
     try {
       const updated = await apiService.updateTransaction(id, transaction);
       setTransactions((prev) =>
-        prev.map((t) => (t.id === id ? updated : t))
+        prev.map((t) => (t._id === id || t.id === id ? updated : t))
       );
     } catch (err) {
       console.error("Error updating transaction:", err);
@@ -76,18 +72,16 @@ export const useTransactions = () => {
     }
   };
 
-  // === eliminar transacción ===
   const deleteTransaction = async (id: string) => {
     try {
       await apiService.deleteTransaction(id);
-setTransactions((prev) => prev.filter((t) => (t._id || t.id) !== id));
+      setTransactions((prev) => prev.filter((t) => (t._id || t.id) !== id));
     } catch (err) {
       console.error("Error deleting transaction:", err);
       throw err;
     }
   };
 
-  // === refrescar todo ===
   const refreshTransactions = async () => {
     setLoading(true);
     await fetchTransactions();
